@@ -1,0 +1,362 @@
+> cat tmp.log
+> n3 > cat tmp.log:
+n3
+[x=0 y=15]Down Right Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=697
+[x=0 y=14]Right Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=649
+[x=0 y=13]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=649
+[x=1 y=13]Up Right
+Go Down
+Turn Right
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=697
+[x=1 y=14]Right Left
+Go Down
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=745
+[x=1 y=15]Down Left
+Go Right
+Turn Left
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=745
+[x=2 y=15]Down Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=697
+[x=2 y=14]Right Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=649
+[x=2 y=13]Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=601
+[x=2 y=12]Up Right
+Go Left
+Turn Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=601
+[x=1 y=12]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=601
+[x=0 y=12]Down Left
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=553
+[x=0 y=11]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=553
+[x=1 y=11]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=553
+[x=2 y=11]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=553
+[x=3 y=11]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=553
+[x=4 y=11]Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=505
+[x=4 y=10]Right
+Go Left
+Turn Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=505
+[x=3 y=10]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=505
+[x=2 y=10]Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=505
+[x=1 y=10]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=505
+[x=0 y=10]Down Left
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=457
+[x=0 y=9]Right Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=409
+[x=0 y=8]Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=361
+[x=0 y=7]Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=313
+[x=0 y=6]Right Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=265
+[x=0 y=5]Left
+Go Up
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=217
+[x=0 y=4]Right Left
+Go Down
+Turn Around
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=42 ypos=265
+[x=0 y=5]Left
+Go Right
+Turn Left
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=265
+[x=1 y=5]Down Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=217
+[x=1 y=4]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=217
+[x=2 y=4]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=217
+[x=3 y=4]Up
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=217
+[x=4 y=4]Down Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=169
+[x=4 y=3]Up Right Left
+Go Down
+Turn Around
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=217
+[x=4 y=4]Down Right
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=217
+[x=3 y=4]Up
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=265
+[x=3 y=5]Down Right
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=265
+[x=2 y=5]Up Left
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=313
+[x=2 y=6]Down
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=313
+[x=1 y=6]Up Left
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=361
+[x=1 y=7]Down Right
+Go Up
+Turn Around
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=313
+[x=1 y=6]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=313
+[x=2 y=6]Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=313
+[x=3 y=6]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=313
+[x=4 y=6]Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=265
+[x=4 y=5]Up Right Left
+Go Down
+Turn Around
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=313
+[x=4 y=6]Right
+Go Down
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=361
+[x=4 y=7]Right
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=361
+[x=3 y=7]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=361
+[x=2 y=7]Up Left
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=409
+[x=2 y=8]Down
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=409
+[x=1 y=8]Up
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=457
+[x=1 y=9]Down Left
+Go Right
+Turn Left
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=457
+[x=2 y=9]Up Right
+Go Left
+Turn Around
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=457
+[x=1 y=9]Down Left
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=409
+[x=1 y=8]Up
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=409
+[x=2 y=8]Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=409
+[x=3 y=8]Up Right
+Go Down
+Turn Right
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=457
+[x=3 y=9]Down Left
+Go Right
+Turn Left
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=457
+[x=4 y=9]Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=409
+[x=4 y=8]Right Left
+Go Down
+Turn Around
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=457
+[x=4 y=9]Right
+Go Left
+Turn Right
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=457
+[x=3 y=9]Down Left
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=409
+[x=3 y=8]Up Right
+Go Left
+Turn Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=409
+[x=2 y=8]Down
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=361
+[x=2 y=7]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=361
+[x=3 y=7]Up Down
+Go Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=361
+[x=4 y=7]Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=330 ypos=313
+[x=4 y=6]Right
+Go Left
+Turn Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=313
+[x=3 y=6]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=313
+[x=2 y=6]Down
+Go Up
+Turn Right
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=265
+[x=2 y=5]Up Left
+Go Right
+Turn Right
+direction: right
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=265
+[x=3 y=5]Down Right
+Go Up
+Turn Left
+direction: up
+coresendmsg -a 10.0.0.254 node number=3 xpos=258 ypos=217
+[x=3 y=4]Up
+Go Left
+Turn Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=186 ypos=217
+[x=2 y=4]Up Down
+Go Left
+direction: left
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=217
+[x=1 y=4]Up Left
+Go Down
+Turn Left
+direction: down
+coresendmsg -a 10.0.0.254 node number=3 xpos=114 ypos=265
+[x=1 y=5]Down Right

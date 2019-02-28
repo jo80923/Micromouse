@@ -5,6 +5,7 @@
 from task import TaskLoader, Task, CommandTranslator, WallDetector
 
 class Micromouse:
+	id = -1
 	x = -1
 	y = -1
 	mazeMap = None
@@ -14,6 +15,13 @@ class Micromouse:
 	direction = 'UP'
 
 	def __init__(self, mazeMap):
+		self.initMap(mazeMap)
+		self.initTaskLoader()
+		self.initCommandTranslator()
+		self.initWallDetector()
+
+	def __init__(self, mazeMap, id):
+		self.id = id
 		self.initMap(mazeMap)
 		self.initTaskLoader()
 		self.initCommandTranslator()
@@ -112,5 +120,3 @@ class Micromouse:
 		self.wallDetector.detectRightWall(cell)
 		self.wallDetector.detectUpWall(cell)
 		self.wallDetector.detectDownWall(cell)
-
-

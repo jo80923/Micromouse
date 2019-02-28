@@ -328,11 +328,17 @@ class StrategyTestRendezvous(Strategy):
 	path = []
 	isBack = False
 	network = None
+	numNeighbors = 0
+	neighborLocations = []
+	neighborDirections = []
 
-	def __init__(self, mouse):
+	def __init__(self, mouse, totalMice):
 		self.mouse = mouse
+		print(totalMice)
+		self.numNeighbors = totalMice - 1
 		self.isVisited = [[0 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
 		self.isVisited[self.mouse.x][self.mouse.y] = 1
+
 		self.network = NetworkInterface()
 		self.network.initSocket()
 		self.network.startReceiveThread()
