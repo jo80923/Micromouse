@@ -9,7 +9,7 @@ from controller import COREController
 from socket import *
 
 mazeMap = Map(16, 16)
-mazeMap.readFromFile('/home/zhiwei/Micromouse/mazes/2012japan-ef.txt')
+mazeMap.readFromFile('/home/jackson/Development/Micromouse/mazes/2012japan-ef.txt')
 micromouse = Micromouse(mazeMap)
 index = gethostname()[1:]
 initPoint = {'1':(0,0), '2':(15,0), '3':(0,15), '4':(15,15)}
