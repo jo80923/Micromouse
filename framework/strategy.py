@@ -288,7 +288,7 @@ class StrategyTestDFSDisplayEV3(Strategy):
 
 	def go(self):
 		self.mouse.senseWalls()
-		print(self.mouse.getCurrentCell().getWhichIsWall())
+		#print(self.mouse.getCurrentCell().getWhichIsWall())
 		sendData = {'x': self.mouse.x, 'y':self.mouse.y, 'up':self.mouse.canGoUp(), 'down':self.mouse.canGoDown(), 'left':self.mouse.canGoLeft(), 'right':self.mouse.canGoRight()}
 		self.network.sendStringData(sendData)
 
@@ -335,12 +335,15 @@ class StrategyTestRendezvous(Strategy):
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.mouse = mouse
 		self.numNeighbors = numNeighbors
-		self.gradients = [[0 for i in range(self.numNeighbors)] for j in range(3)]
+		for x in range(numNeighbors):
+			self.gradients.append([])
+			for y in range(3):
+				self.gradients[x].append(0)
 
 		for key, value in initLocations.items():
-			print(key)
 			if key is not self.mouse.id:
-				self.neighborInfo[key] = value
+				self.neighborInfo[key] = {'x':value[0], 'y':value[1], 'direction' : 'UP'}
+
 
 		#left off here
 		self.isVisited = [[0 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
@@ -368,8 +371,8 @@ class StrategyTestRendezvous(Strategy):
 			#print(recvData)
 			cell = self.mouse.mazeMap.getCell(otherMap['x'], otherMap['y'])
 			self.isVisited[otherMap['x']][otherMap['y']] = 1
-
-			#self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
+			if otherMap['id'] is not self.mouse.id:
+				self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
 
 			if otherMap['up']: self.mouse.mazeMap.setCellUpAsWall(cell)
 			if otherMap['down']: self.mouse.mazeMap.setCellDownAsWall(cell)
@@ -379,14 +382,15 @@ class StrategyTestRendezvous(Strategy):
 
 		m = 0
 		#do I want to use direction? how?
-		#for info in self.neighborInfo.values():
-		#	self.gradients[m][0] = self.mouse.x - info['x']
-		#	self.gradients[m][1] = self.mouse.y - info['y']
+		for info in self.neighborInfo.values():
+			self.gradients[m][0] = self.mouse.x - info['x']
+			self.gradients[m][1] = self.mouse.y - info['y']
 			#dist squared
-			#self.gradients[m][2] = (self.gradients[m][0]*self.gradients[m][0]) + (self.gradients[m][1]*self.gradients[m][1])
-		#	print(self.gradients[m][0])
-		#	print(self.gradients[m][1])
-		#	m += 1
+			self.gradients[m][2] = (self.gradients[m][0]*self.gradients[m][0]) + (self.gradients[m][1]*self.gradients[m][1])
+			print(self.gradients[m])
+			m += 1
+
+		#now use gradients
 
 		if self.mouse.canGoLeft() and not self.isVisited[self.mouse.x-1][self.mouse.y]:
 			self.path.append([self.mouse.x, self.mouse.y])
