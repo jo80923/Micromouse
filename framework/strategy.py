@@ -329,16 +329,22 @@ class StrategyTestRendezvous(Strategy):
 	isBack = False
 	network = None
 	numNeighbors = 0
-	neighborLocations = []
-	neighborDirections = []
+	neighborInfo = {}
+	gradients = []
 
-	def __init__(self, mouse, totalMice):
+	def __init__(self, mouse, numNeighbors, initLocations):
 		self.mouse = mouse
-		print(totalMice)
-		self.numNeighbors = totalMice - 1
+		self.numNeighbors = numNeighbors
+		self.gradients = [[0 for i in range(self.numNeighbors)] for j in range(3)]
+
+		for key, value in initLocations.items():
+			print(key)
+			if key is not self.mouse.id:
+				self.neighborInfo[key] = value
+
+		#left off here
 		self.isVisited = [[0 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
 		self.isVisited[self.mouse.x][self.mouse.y] = 1
-
 		self.network = NetworkInterface()
 		self.network.initSocket()
 		self.network.startReceiveThread()
@@ -349,18 +355,38 @@ class StrategyTestRendezvous(Strategy):
 	def go(self):
 		self.mouse.senseWalls()
 		print(self.mouse.getCurrentCell().getWhichIsWall())
-		sendData = {'x': self.mouse.x, 'y':self.mouse.y, 'up': not self.mouse.canGoUp(), 'down': not self.mouse.canGoDown(), 'left': not self.mouse.canGoLeft(), 'right': not self.mouse.canGoRight()}
+
+		sendData = {'id': self.mouse.id, 'direction': self.mouse.direction,
+		'x': self.mouse.x, 'y':self.mouse.y, 'up': not self.mouse.canGoUp(),
+		'down': not self.mouse.canGoDown(), 'left': not self.mouse.canGoLeft(),
+		'right': not self.mouse.canGoRight()}
+
 		self.network.sendStringData(sendData)
 		recvData = self.network.retrieveData()
 		while recvData:
 			otherMap = recvData
+			#print(recvData)
 			cell = self.mouse.mazeMap.getCell(otherMap['x'], otherMap['y'])
 			self.isVisited[otherMap['x']][otherMap['y']] = 1
+
+			#self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
+
 			if otherMap['up']: self.mouse.mazeMap.setCellUpAsWall(cell)
 			if otherMap['down']: self.mouse.mazeMap.setCellDownAsWall(cell)
 			if otherMap['left']: self.mouse.mazeMap.setCellLeftAsWall(cell)
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
+
+		m = 0
+		#do I want to use direction? how?
+		#for info in self.neighborInfo.values():
+		#	self.gradients[m][0] = self.mouse.x - info['x']
+		#	self.gradients[m][1] = self.mouse.y - info['y']
+			#dist squared
+			#self.gradients[m][2] = (self.gradients[m][0]*self.gradients[m][0]) + (self.gradients[m][1]*self.gradients[m][1])
+		#	print(self.gradients[m][0])
+		#	print(self.gradients[m][1])
+		#	m += 1
 
 		if self.mouse.canGoLeft() and not self.isVisited[self.mouse.x-1][self.mouse.y]:
 			self.path.append([self.mouse.x, self.mouse.y])

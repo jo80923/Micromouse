@@ -148,4 +148,3 @@ class Map:
 		for i in range(self.height):
 			for j in range(self.width):
 				self.getCell(i, j).setAllAsNoWall()
-
