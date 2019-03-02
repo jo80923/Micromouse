@@ -415,27 +415,27 @@ class StrategyTestRendezvous(Strategy):
 		#now use gradients
 		moved = False
 		for d in range(8):
-			direction = ranks[3 - int(d/2)][0]
+			direction = ranks[3 - d%4][0] if (d < 4) else ranks[d%4]
 			if direction is 'left' and self.mouse.canGoLeft() and \
-			(self.isVisited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or d >= 4 or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			(self.isVisited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
 				self.path.append([self.mouse.x, self.mouse.y])
 				self.isVisited[self.mouse.x-1][self.mouse.y] = self.mouse.id
 				self.mouse.goLeft()
 				moved = True
 			elif direction is 'up' and self.mouse.canGoUp() and \
-			(self.isVisited[self.mouse.x][self.mouse.y-1] is not self.mouse.id or d >= 4 or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			(self.isVisited[self.mouse.x][self.mouse.y-1] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
 				self.path.append([self.mouse.x, self.mouse.y])
 				self.isVisited[self.mouse.x][self.mouse.y-1] = self.mouse.id
 				self.mouse.goUp()
 				moved = True
 			elif direction is 'right' and self.mouse.canGoRight() and \
-			(self.isVisited[self.mouse.x+1][self.mouse.y] is not self.mouse.id or d >= 4 or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			(self.isVisited[self.mouse.x+1][self.mouse.y] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
 				self.path.append([self.mouse.x, self.mouse.y])
 				self.isVisited[self.mouse.x+1][self.mouse.y] = self.mouse.id
 				self.mouse.goRight()
 				moved = True
 			elif direction is 'down' and self.mouse.canGoDown() and \
-			(self.isVisited[self.mouse.x][self.mouse.y+1] is not self.mouse.id or d >= 4 or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			(self.isVisited[self.mouse.x][self.mouse.y+1] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
 				self.path.append([self.mouse.x, self.mouse.y])
 				self.isVisited[self.mouse.x][self.mouse.y+1] = self.mouse.id
 				self.mouse.goDown()
