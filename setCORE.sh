@@ -142,4 +142,3 @@ fi
 
 echo "The environment is successfully set up for running core_demo.py."
 echo "Open maze.xml and click Start Session button to demo."
-
