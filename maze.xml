@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scenario compiled="true" name="maze.xml" version="1.0" xmlns="nmfPlan" xmlns:CORE="coreSpecific">
   <network id="wlan5" name="wlan5">
-    <point lat="47.5761230757" lon="-122.12493246" type="gps"/>
+    <point lat="47.5762850205" lon="-122.124929762" type="gps"/>
     <type>wireless</type>
     <alias domain="COREID">5</alias>
     <member type="channel">wlan5/wireless</member>
@@ -17,25 +17,25 @@
   <router id="n1" name="n1">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">1</alias>
-    <point lat="47.5788723343" lon="-122.131489061" type="gps"/>
+    <point lat="47.5775632784" lon="-122.13151071" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotblu.png"/>
   </router>
   <router id="n2" name="n2">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">2</alias>
-    <point lat="47.578720857" lon="-122.109968956" type="gps"/>
+    <point lat="47.578045935" lon="-122.109960448" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotgre.png"/>
   </router>
   <router id="n3" name="n3">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">3</alias>
-    <point lat="47.5693720035" lon="-122.131705974" type="gps"/>
+    <point lat="47.5697899093" lon="-122.131639236" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotpur.png"/>
   </router>
   <router id="n4" name="n4">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">4</alias>
-    <point lat="47.5691929823" lon="-122.110110455" type="gps"/>
+    <point lat="47.569624834" lon="-122.110103139" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotyel.png"/>
   </router>
   <CORE:defaultservices>

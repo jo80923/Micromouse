@@ -328,11 +328,12 @@ class StrategyTestRendezvous(Strategy):
 	mouse = None
 	isVisited = []
 	path = []
-	isBack = False
+	backTrack = False
 	network = None
 	numNeighbors = 0
 	neighborInfo = {}
 	gradients = []
+
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.mouse = mouse
@@ -388,63 +389,84 @@ class StrategyTestRendezvous(Strategy):
 		dist = 0.0
 		x = 0.0
 		y = 0.0
+		options = [0.0, 0.0, 0.0, 0.0]
 		for info in self.neighborInfo.values():
-			x = float(self.mouse.x - info['x'])
-			y = float(self.mouse.y - info['y'])
+			x = info['x'] - self.mouse.x
+			y = info['y'] - self.mouse.y
 			#dist squared
 			dist = math.sqrt((x*x) + (y*y))
-			x /= dist
-			y /= dist
-			if x < 0: self.gradients[m*2] = (abs(x),'-x')
-			else: self.gradients[m*2] = (x,'+x')
-			if y < 0: self.gradients[m*2 + 1] = (abs(y),'-y')
-			else: self.gradients[m*2 + 1] = (y,'+y')
+			x *= dist
+			y *= dist
+			if x < 0:
+				self.gradients[m*2] = (abs(x),'left')
+				options[0] = abs(x)
+			else:
+				self.gradients[m*2] = (x,'right')
+				options[1] = x
+			if y > 0:
+				self.gradients[m*2 + 1] = (y,'down')
+				options[2] = y
+			else:
+				self.gradients[m*2 + 1] = (abs(y),'up')
+				options[3] = abs(y)
 			m += 1
 
+
+		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
+		ranks = sorted(ranks, key=itemgetter(1))
 		self.gradients = sorted(self.gradients,key=itemgetter(0))
-		print(self.gradients)
+		print(ranks)
+
+		#use back track to determine if backtracking is necessary 
+
 		#now use gradients
 		moved = False
-		direction = '+-'
-		for d in range(self.numNeighbors*2):
-			direction = self.gradients[d][1]
-			if direction is '+x':
-				if self.mouse.canGoLeft():
-					self.path.append([self.mouse.x, self.mouse.y])
-					self.isVisited[self.mouse.x-1][self.mouse.y] = 1
-					self.mouse.goLeft()
-					moved = True
-			elif direction is '-x':
-				if self.mouse.canGoUp():
-					self.path.append([self.mouse.x, self.mouse.y])
-					self.isVisited[self.mouse.x][self.mouse.y-1] = 1
-					self.mouse.goUp()
-					moved = True
-			elif direction is '+y':
-				if self.mouse.canGoRight():
-					self.path.append([self.mouse.x, self.mouse.y])
-					self.isVisited[self.mouse.x+1][self.mouse.y] = 1
-					self.mouse.goRight()
-					moved = True
-			elif direction is '-y':
-				if self.mouse.canGoDown():
-					self.path.append([self.mouse.x, self.mouse.y])
-					self.isVisited[self.mouse.x][self.mouse.y+1] = 1
-					self.mouse.goDown()
-					moved = True
-			#else:
-			#	if len(self.path) != 0:
-			#		x, y = self.path.pop()
-			#		if x < self.mouse.x:
-			#			self.mouse.goLeft()
-			#		elif x > self.mouse.x:
-			#			self.mouse.goRight()
-			#		elif y < self.mouse.y:
-			#			self.mouse.goUp()
-			#		elif y > self.mouse.y:
-			#			self.mouse.goDown()
+		for d in range(4):
+			direction = ranks[3 - d][0]
+			print(ranks[3 - d][0])
+			if direction is 'left' and self.mouse.canGoLeft() and (d < 2 or not self.isVisited[self.mouse.x-1][self.mouse.y]):
+				if len(self.path) is not 0 and self.path[-1][0] == self.mouse.x-1 and self.path[-1][1] is self.mouse.y:
+					continue
+				self.path.append([self.mouse.x, self.mouse.y])
+				self.isVisited[self.mouse.x-1][self.mouse.y] = 1
+				self.mouse.goLeft()
+				moved = True
+			elif direction is 'up' and self.mouse.canGoUp() and (d < 2 or not self.isVisited[self.mouse.x][self.mouse.y-1]):
+				if len(self.path) is not 0 and self.path[-1][0] == self.mouse.x and self.path[-1][1] is self.mouse.y-1:
+					continue
+				self.path.append([self.mouse.x, self.mouse.y])
+				self.isVisited[self.mouse.x][self.mouse.y-1] = 1
+				self.mouse.goUp()
+				moved = True
+			elif direction is 'right' and self.mouse.canGoRight() and (d < 2 or not self.isVisited[self.mouse.x+1][self.mouse.y]):
+				if len(self.path) is not 0 and self.path[-1][0] == self.mouse.x+1 and self.path[-1][1] is self.mouse.y:
+					continue
+				self.path.append([self.mouse.x, self.mouse.y])
+				self.isVisited[self.mouse.x+1][self.mouse.y] = 1
+				self.mouse.goRight()
+				moved = True
+			elif direction is 'down' and self.mouse.canGoDown() and (d < 2 or not self.isVisited[self.mouse.x][self.mouse.y+1]):
+				if len(self.path) is not 0 and self.path[-1][0] == self.mouse.x and self.path[-1][1] is self.mouse.y+1:
+					continue
+				self.path.append([self.mouse.x, self.mouse.y])
+				self.isVisited[self.mouse.x][self.mouse.y+1] = 1
+				self.mouse.goDown()
+				moved = True
 			if moved: break
+		if not moved and len(self.path) != 0:
+			#maybe iterate through directions that werent the previous locaton
+			x, y = self.path.pop()
+			if x < self.mouse.x:
+				self.mouse.goLeft()
+			elif x > self.mouse.x:
+				self.mouse.goRight()
+			elif y < self.mouse.y:
+				self.mouse.goUp()
+			elif y > self.mouse.y:
+				self.mouse.goDown()
+
+		#once all within distance chose collective location and wall follow there
+		#maybe label cells with cold and hot spots
 
 
-
-		sleep(0.5)
+		sleep(0.1)
