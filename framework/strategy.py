@@ -4,6 +4,8 @@
 
 from task import Strategy, NetworkInterface
 from time import sleep
+import math
+from operator import itemgetter
 
 class StrategyTestProgress(Strategy):
 	progress = 10
@@ -336,9 +338,10 @@ class StrategyTestRendezvous(Strategy):
 		self.mouse = mouse
 		self.numNeighbors = numNeighbors
 		for x in range(numNeighbors):
-			self.gradients.append([])
-			for y in range(3):
-				self.gradients[x].append(0)
+			self.gradients.append((0.0, 'x'))
+			self.gradients.append((0.0, 'y'))
+			#for y in range(2):
+			#	self.gradients[x].append(0)
 
 		for key, value in initLocations.items():
 			if key is not self.mouse.id:
@@ -382,44 +385,66 @@ class StrategyTestRendezvous(Strategy):
 
 		m = 0
 		#do I want to use direction? how?
+		dist = 0.0
+		x = 0.0
+		y = 0.0
 		for info in self.neighborInfo.values():
-			self.gradients[m][0] = self.mouse.x - info['x']
-			self.gradients[m][1] = self.mouse.y - info['y']
+			x = float(self.mouse.x - info['x'])
+			y = float(self.mouse.y - info['y'])
 			#dist squared
-			self.gradients[m][2] = (self.gradients[m][0]*self.gradients[m][0]) + (self.gradients[m][1]*self.gradients[m][1])
-			print(self.gradients[m])
+			dist = math.sqrt((x*x) + (y*y))
+			x /= dist
+			y /= dist
+			if x < 0: self.gradients[m*2] = (abs(x),'-x')
+			else: self.gradients[m*2] = (x,'+x')
+			if y < 0: self.gradients[m*2 + 1] = (abs(y),'-y')
+			else: self.gradients[m*2 + 1] = (y,'+y')
 			m += 1
 
+		self.gradients = sorted(self.gradients,key=itemgetter(0))
+		print(self.gradients)
 		#now use gradients
-
-		if self.mouse.canGoLeft() and not self.isVisited[self.mouse.x-1][self.mouse.y]:
-			self.path.append([self.mouse.x, self.mouse.y])
-			self.isVisited[self.mouse.x-1][self.mouse.y] = 1
-			self.mouse.goLeft()
-		elif self.mouse.canGoUp() and not self.isVisited[self.mouse.x][self.mouse.y-1]:
-			self.path.append([self.mouse.x, self.mouse.y])
-			self.isVisited[self.mouse.x][self.mouse.y-1] = 1
-			self.mouse.goUp()
-		elif self.mouse.canGoRight() and not self.isVisited[self.mouse.x+1][self.mouse.y]:
-			self.path.append([self.mouse.x, self.mouse.y])
-			self.isVisited[self.mouse.x+1][self.mouse.y] = 1
-			self.mouse.goRight()
-		elif self.mouse.canGoDown() and not self.isVisited[self.mouse.x][self.mouse.y+1]:
-			self.path.append([self.mouse.x, self.mouse.y])
-			self.isVisited[self.mouse.x][self.mouse.y+1] = 1
-			self.mouse.goDown()
-		else:
-			if len(self.path) != 0:
-				x, y = self.path.pop()
-				if x < self.mouse.x:
+		moved = False
+		direction = '+-'
+		for d in range(self.numNeighbors*2):
+			direction = self.gradients[d][1]
+			if direction is '+x':
+				if self.mouse.canGoLeft():
+					self.path.append([self.mouse.x, self.mouse.y])
+					self.isVisited[self.mouse.x-1][self.mouse.y] = 1
 					self.mouse.goLeft()
-				elif x > self.mouse.x:
-					self.mouse.goRight()
-				elif y < self.mouse.y:
+					moved = True
+			elif direction is '-x':
+				if self.mouse.canGoUp():
+					self.path.append([self.mouse.x, self.mouse.y])
+					self.isVisited[self.mouse.x][self.mouse.y-1] = 1
 					self.mouse.goUp()
-				elif y > self.mouse.y:
+					moved = True
+			elif direction is '+y':
+				if self.mouse.canGoRight():
+					self.path.append([self.mouse.x, self.mouse.y])
+					self.isVisited[self.mouse.x+1][self.mouse.y] = 1
+					self.mouse.goRight()
+					moved = True
+			elif direction is '-y':
+				if self.mouse.canGoDown():
+					self.path.append([self.mouse.x, self.mouse.y])
+					self.isVisited[self.mouse.x][self.mouse.y+1] = 1
 					self.mouse.goDown()
-			else:
-				self.isBack = True
+					moved = True
+			#else:
+			#	if len(self.path) != 0:
+			#		x, y = self.path.pop()
+			#		if x < self.mouse.x:
+			#			self.mouse.goLeft()
+			#		elif x > self.mouse.x:
+			#			self.mouse.goRight()
+			#		elif y < self.mouse.y:
+			#			self.mouse.goUp()
+			#		elif y > self.mouse.y:
+			#			self.mouse.goDown()
+			if moved: break
+
+
 
 		sleep(0.5)
