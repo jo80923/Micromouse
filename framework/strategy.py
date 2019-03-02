@@ -328,21 +328,19 @@ class StrategyTestRendezvous(Strategy):
 	mouse = None
 	isVisited = []
 	path = []
-	backTrack = False
+	isBack = False
 	network = None
 	numNeighbors = 0
 	neighborInfo = {}
 	gradients = []
-
+	backTrack = False
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.mouse = mouse
 		self.numNeighbors = numNeighbors
 		for x in range(numNeighbors):
-			self.gradients.append((0.0, 'x'))
-			self.gradients.append((0.0, 'y'))
-			#for y in range(2):
-			#	self.gradients[x].append(0)
+			self.gradients.append((0, 'x'))
+			self.gradients.append((0, 'y'))
 
 		for key, value in initLocations.items():
 			if key is not self.mouse.id:
@@ -386,15 +384,15 @@ class StrategyTestRendezvous(Strategy):
 
 		m = 0
 		#do I want to use direction? how?
-		dist = 0.0
-		x = 0.0
-		y = 0.0
-		options = [0.0, 0.0, 0.0, 0.0]
+		dist = 0
+		x = 0
+		y = 0
+		options = [0, 0, 0, 0]
 		for info in self.neighborInfo.values():
 			x = info['x'] - self.mouse.x
 			y = info['y'] - self.mouse.y
 			#dist squared
-			dist = math.sqrt((x*x) + (y*y))
+			dist = (x*x) + (y*y)
 			x *= dist
 			y *= dist
 			if x < 0:
@@ -417,7 +415,6 @@ class StrategyTestRendezvous(Strategy):
 		self.gradients = sorted(self.gradients,key=itemgetter(0))
 		print(ranks)
 
-		#use back track to determine if backtracking is necessary 
 
 		#now use gradients
 		moved = False
@@ -455,7 +452,8 @@ class StrategyTestRendezvous(Strategy):
 			if moved: break
 		if not moved and len(self.path) != 0:
 			#maybe iterate through directions that werent the previous locaton
-			x, y = self.path.pop()
+			x, y = self.path[-1]
+			self.path.append([self.mouse.x, self.mouse.y])
 			if x < self.mouse.x:
 				self.mouse.goLeft()
 			elif x > self.mouse.x:
