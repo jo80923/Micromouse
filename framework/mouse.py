@@ -5,7 +5,7 @@
 from task import TaskLoader, Task, CommandTranslator, WallDetector
 
 class Micromouse:
-	id = '-1'
+	id = -1
 	x = -1
 	y = -1
 	mazeMap = None

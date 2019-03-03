@@ -326,32 +326,27 @@ class StrategyTestDFSDisplayEV3(Strategy):
 
 class StrategyTestRendezvous(Strategy):
 	mouse = None
-	isVisited = []
+	visited = []
 	path = []
 	isBack = False
 	network = None
 	numNeighbors = 0
 	neighborInfo = {}
-	gradients = []
+	follow = []
 	finished = False
-	follow = -1
+	finalCentroid = []
 
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.mouse = mouse
+		self.finalCentroid = [-1,-1]
 		self.numNeighbors = numNeighbors
-		for x in range(numNeighbors):
-			self.gradients.append((0, 'x'))
-			self.gradients.append((0, 'y'))
-
 		for key, value in initLocations.items():
 			if key is not self.mouse.id:
 				self.neighborInfo[key] = {'x':value[0], 'y':value[1], 'direction' : 'UP'}
 
-
-		#left off here
-		self.isVisited = [[-1 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
-		self.isVisited[self.mouse.x][self.mouse.y] = 1
+		self.visited = [[-1 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
+		self.visited[self.mouse.x][self.mouse.y] = 1
 		self.network = NetworkInterface()
 		self.network.initSocket()
 		self.network.startReceiveThread()
@@ -370,14 +365,14 @@ class StrategyTestRendezvous(Strategy):
 
 		self.network.sendStringData(sendData)
 		recvData = self.network.retrieveData()
+
 		while recvData:
 			otherMap = recvData
-			#print(recvData)
 			cell = self.mouse.mazeMap.getCell(otherMap['x'], otherMap['y'])
-			self.isVisited[otherMap['x']][otherMap['y']] = otherMap['id']
+			if self.visited[otherMap['x']][otherMap['y']] is not self.numNeighbors + 1:
+				self.visited[otherMap['x']][otherMap['y']] = otherMap['id']
 			if otherMap['id'] is not self.mouse.id:
 				self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
-
 			if otherMap['up']: self.mouse.mazeMap.setCellUpAsWall(cell)
 			if otherMap['down']: self.mouse.mazeMap.setCellDownAsWall(cell)
 			if otherMap['left']: self.mouse.mazeMap.setCellLeftAsWall(cell)
@@ -388,63 +383,142 @@ class StrategyTestRendezvous(Strategy):
 		y = 0
 		options = [0, 0, 0, 0]
 		self.finished = True
+		found = 0
+		#calc centroid and weights
+		centroid = [self.mouse.x,self.mouse.y]
 		for key, value in self.neighborInfo.items():
+			centroid[0] += value['x']
+			centroid[1] += value['y']
 			x = value['x'] - self.mouse.x
 			y = value['y'] - self.mouse.y
 			#dist squared
 			dist = math.sqrt((x*x) + (y*y))
-			if dist > 1.0: self.finished = False
-			if dist is 0.0:
-				self.follow = key
+			if dist is not 0.0: self.finished = False
+			if dist <= 2.0:
+				if key not in self.follow:
+					self.follow.append(key)
+				found += 1
+			elif dist > 4.0 and key in self.follow:
+				self.follow.remove(key)
 			x *= int(dist)
 			y *= int(dist)
 			if x < 0:
 				options[0] += abs(x)
 			else:
-				options[1] += x
+				options[2] += x
 			if y > 0:
-				options[2] += y
+				options[1] += y
 			else:
 				options[3] += abs(y)
 
 		if self.finished: return
+		centroid[0] /= self.numNeighbors + 1
+		centroid[1] /= self.numNeighbors + 1
+
+		isLeader = False
+		#TODO implement check if leader
+		i = 0
+		#if found >= self.numNeighbors - 1:
+		#	isLeader = True
+		#	for key, value in self.neighborInfo.items():
+		#		if key < self.mouse.id and distances[i] <= 2.0:
+		#			isLeader = False
+		#			break
+		#		i += 1
+
+		moved = False
+		freedom = 0
+		if self.mouse.canGoLeft(): freedom += 1
+		if self.mouse.canGoRight(): freedom += 1
+		if self.mouse.canGoUp(): freedom += 1
+		if self.mouse.canGoDown(): freedom += 1
+		if freedom is 1:
+			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
+
+		x = centroid[0] - self.mouse.x
+		y = centroid[1] - self.mouse.x
+		dist = math.sqrt((x*x)+(y*y))
+		maxDistFromCentroid = dist
+		if self.finalCentroid is not [-1,-1]:
+			centroid = self.finalCentroid
+		else:
+			for value in self.neighborInfo.values():
+				x = centroid[0] - value['x']
+				y = centroid[1] - value['y']
+				dist = math.sqrt((x*x)+(y*y))
+				if dist > maxDistFromCentroid:
+					maxDistFromCentroid = dist
+			if maxDistFromCentroid < 8.0:
+				self.finalCentroid = centroid
+			x = centroid[0] - self.mouse.x
+			y = centroid[1] - self.mouse.x
+			dist = math.sqrt((x*x) + (y*y))
+		if dist < 8.0:
+			if x < 0:
+				options[0] += abs(x)#*int(dist)
+			else:
+				options[1] += x#*int(dist)
+			if y > 0:
+				options[2] += y#*int(dist)
+			else:
+				options[3] += abs(y)#*int(dist)
+
 		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
-		print(ranks)
+		#if within distance of a centroid then chasing centroid else narrow region
+		#this could be done by making the input values for ranks different or
+		#making DFS towards centroid
 
-		#now use gradients
-		moved = False
-		for d in range(8):
-			direction = ranks[3 - d%4][0] if (d < 4) else ranks[d%4]
-			if direction is 'left' and self.mouse.canGoLeft() and \
-			(self.isVisited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+		#narrow region
+		for d in range(4):
+			direction = ranks[3 - d][0]
+			if self.mouse.canGoLeft() and direction is 'left' and\
+			(self.visited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or
+			self.visited[self.mouse.x-1][self.mouse.y] in self.follow) and\
+			self.visited[self.mouse.x-1][self.mouse.y] is not self.numNeighbors + 1:
 				self.path.append([self.mouse.x, self.mouse.y])
-				self.isVisited[self.mouse.x-1][self.mouse.y] = self.mouse.id
+				self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
 				self.mouse.goLeft()
 				moved = True
-			elif direction is 'up' and self.mouse.canGoUp() and \
-			(self.isVisited[self.mouse.x][self.mouse.y-1] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			elif self.mouse.canGoUp() and direction is 'up' and\
+			(self.visited[self.mouse.x][self.mouse.y-1] is not self.mouse.id or
+			self.visited[self.mouse.x][self.mouse.y-1] in self.follow) and\
+			self.visited[self.mouse.x][self.mouse.y-1] is not self.numNeighbors + 1:
 				self.path.append([self.mouse.x, self.mouse.y])
-				self.isVisited[self.mouse.x][self.mouse.y-1] = self.mouse.id
+				self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
 				self.mouse.goUp()
 				moved = True
-			elif direction is 'right' and self.mouse.canGoRight() and \
-			(self.isVisited[self.mouse.x+1][self.mouse.y] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			elif self.mouse.canGoRight() and direction is 'right' and\
+			(self.visited[self.mouse.x+1][self.mouse.y] is not self.mouse.id or
+			self.visited[self.mouse.x+1][self.mouse.y] in self.follow) and\
+			self.visited[self.mouse.x+1][self.mouse.y] is not self.numNeighbors + 1:
 				self.path.append([self.mouse.x, self.mouse.y])
-				self.isVisited[self.mouse.x+1][self.mouse.y] = self.mouse.id
+				self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
 				self.mouse.goRight()
 				moved = True
-			elif direction is 'down' and self.mouse.canGoDown() and \
-			(self.isVisited[self.mouse.x][self.mouse.y+1] is not self.mouse.id or self.isVisited[self.mouse.x-1][self.mouse.y] is self.follow):
+			elif self.mouse.canGoDown() and direction is 'down' and\
+			(self.visited[self.mouse.x][self.mouse.y+1] is not self.mouse.id or
+			self.visited[self.mouse.x][self.mouse.y+1] in self.follow) and\
+			self.visited[self.mouse.x][self.mouse.y+1] is not self.numNeighbors + 1:
 				self.path.append([self.mouse.x, self.mouse.y])
-				self.isVisited[self.mouse.x][self.mouse.y+1] = self.mouse.id
+				self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
 				self.mouse.goDown()
 				moved = True
-			else:
-				print(int(d/2))
 			if moved: break
+		if not moved and len(self.path) != 0:
+			x, y = self.path.pop()
+			if x < self.mouse.x:
+				self.mouse.goLeft()
+			elif x > self.mouse.x:
+				self.mouse.goRight()
+			elif y < self.mouse.y:
+				self.mouse.goUp()
+			elif y > self.mouse.y:
+				self.mouse.goDown()
+
+
 		#once all within distance chose collective location and wall follow there
 		#maybe label cells with cold and hot spots
 
 
-		sleep(0.1)
+		sleep(0.25)
