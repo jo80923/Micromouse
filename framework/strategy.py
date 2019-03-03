@@ -392,16 +392,17 @@ class StrategyTestRendezvous(Strategy):
 			x = value['x'] - self.mouse.x
 			y = value['y'] - self.mouse.y
 			#dist squared
-			dist = math.sqrt((x*x) + (y*y))
+			distSq = (x*x) + (y*y)
+			dist = math.sqrt(distSq)
 			if dist is not 0.0: self.finished = False
 			if dist <= 2.0:
 				if key not in self.follow:
 					self.follow.append(key)
 				found += 1
-			elif dist > 4.0 and key in self.follow:
+			elif dist > 8.0 and key in self.follow:
 				self.follow.remove(key)
-			x *= int(dist)
-			y *= int(dist)
+			x *= distSq
+			y *= distSq
 			if x < 0:
 				options[0] += abs(x)
 			else:
@@ -412,21 +413,9 @@ class StrategyTestRendezvous(Strategy):
 				options[3] += abs(y)
 
 		if self.finished: return
-		centroid[0] /= self.numNeighbors + 1
-		centroid[1] /= self.numNeighbors + 1
+		centroid[0] = math.floor(centroid[0]/self.numNeighbors + 1)
+		centroid[1] = math.floor(centroid[1]/self.numNeighbors + 1)
 
-		isLeader = False
-		#TODO implement check if leader
-		i = 0
-		#if found >= self.numNeighbors - 1:
-		#	isLeader = True
-		#	for key, value in self.neighborInfo.items():
-		#		if key < self.mouse.id and distances[i] <= 2.0:
-		#			isLeader = False
-		#			break
-		#		i += 1
-
-		moved = False
 		freedom = 0
 		if self.mouse.canGoLeft(): freedom += 1
 		if self.mouse.canGoRight(): freedom += 1
@@ -434,43 +423,44 @@ class StrategyTestRendezvous(Strategy):
 		if self.mouse.canGoDown(): freedom += 1
 		if freedom is 1:
 			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
+		if len(self.follow) is self.numNeighbors:
+			options = [0,0,0,0]
+			if self.finalCentroid is not [-1,-1]:
+				self.finalCentroid = centroid
 
 		x = centroid[0] - self.mouse.x
 		y = centroid[1] - self.mouse.x
-		dist = math.sqrt((x*x)+(y*y))
-		maxDistFromCentroid = dist
-		if self.finalCentroid is not [-1,-1]:
-			centroid = self.finalCentroid
+		distSq = (x*x)+(y*y)
+		dontMove = True
+		for value in self.neighborInfo.values():
+			x = centroid[0] - value['x']
+			y = centroid[1] - value['y']
+			if distSq <= (x*x)+(y*y):
+				dontMove = False
+				break
+
+		if dontMove and len(self.follow) > 0:
+			print('furthest away from centroid...waiting for neighbors to gain ground')
+			return
+		x = (centroid[0] - self.mouse.x)*distSq
+		y = (centroid[1] - self.mouse.x)*distSq
+
+		if x < 0:
+			options[0] += abs(x)*distSq
 		else:
-			for value in self.neighborInfo.values():
-				x = centroid[0] - value['x']
-				y = centroid[1] - value['y']
-				dist = math.sqrt((x*x)+(y*y))
-				if dist > maxDistFromCentroid:
-					maxDistFromCentroid = dist
-			if maxDistFromCentroid < 8.0:
-				self.finalCentroid = centroid
-			x = centroid[0] - self.mouse.x
-			y = centroid[1] - self.mouse.x
-			dist = math.sqrt((x*x) + (y*y))
-		if dist < 8.0:
-			if x < 0:
-				options[0] += abs(x)#*int(dist)
-			else:
-				options[1] += x#*int(dist)
-			if y > 0:
-				options[2] += y#*int(dist)
-			else:
-				options[3] += abs(y)#*int(dist)
+			options[1] += x*distSq
+		if y > 0:
+			options[2] += y*distSq
+		else:
+			options[3] += abs(y)*distSq
 
 		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
-		#if within distance of a centroid then chasing centroid else narrow region
-		#this could be done by making the input values for ranks different or
-		#making DFS towards centroid
 
 		#narrow region
+		moved = False
 		for d in range(4):
+			#if ranks[3 - d][1] is 0: break
 			direction = ranks[3 - d][0]
 			if self.mouse.canGoLeft() and direction is 'left' and\
 			(self.visited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or
@@ -521,4 +511,4 @@ class StrategyTestRendezvous(Strategy):
 		#maybe label cells with cold and hot spots
 
 
-		sleep(0.25)
+		sleep(0.5)
