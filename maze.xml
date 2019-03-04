@@ -18,25 +18,25 @@
     <type domain="CORE">mdr</type>
     <alias domain="COREID">1</alias>
     <point lat="47.5787913618" lon="-122.1314904" type="gps"/>
-    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotblu.png"/>
+    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/vader.png"/>
   </router>
   <router id="n2" name="n2">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">2</alias>
     <point lat="47.5786398849" lon="-122.109970328" type="gps"/>
-    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotgre.png"/>
+    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/cat.png"/>
   </router>
   <router id="n3" name="n3">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">3</alias>
     <point lat="47.5692910308" lon="-122.131707313" type="gps"/>
-    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotpur.png"/>
+    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/mario.png"/>
   </router>
   <router id="n4" name="n4">
     <type domain="CORE">mdr</type>
     <alias domain="COREID">4</alias>
     <point lat="47.5691120101" lon="-122.110111827" type="gps"/>
-    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/robotyel.png"/>
+    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/raptor.png"/>
   </router>
   <CORE:defaultservices>
     <device type="mdr">
