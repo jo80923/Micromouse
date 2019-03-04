@@ -6,6 +6,7 @@ from task import Strategy, NetworkInterface
 from time import sleep
 import math
 from operator import itemgetter
+import sys
 
 class StrategyTestProgress(Strategy):
 	progress = 10
@@ -326,33 +327,120 @@ class StrategyTestDFSDisplayEV3(Strategy):
 
 class StrategyTestRendezvous(Strategy):
 	mouse = None
-	visited = []
-	path = []
-	isBack = False
 	network = None
+	finished = False
 	numNeighbors = 0
 	neighborInfo = {}
-	follow = []
-	finished = False
-	finalCentroid = []
-
+	centroid = []
+	group = []
+	groupCentroid = []
+	weights = []
+	visited = []
+	path = []
 
 	def __init__(self, mouse, numNeighbors, initLocations):
+		self.weights = [0,0,0,0]
+		self.centroid = [-1,-1]
+		self.groupCentroid = [-1,-1]
 		self.mouse = mouse
-		self.finalCentroid = [-1,-1]
 		self.numNeighbors = numNeighbors
 		for key, value in initLocations.items():
 			if key is not self.mouse.id:
 				self.neighborInfo[key] = {'x':value[0], 'y':value[1], 'direction' : 'UP'}
 
 		self.visited = [[-1 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
-		self.visited[self.mouse.x][self.mouse.y] = 1
+		self.visited[self.mouse.x][self.mouse.y] = self.mouse.id
 		self.network = NetworkInterface()
 		self.network.initSocket()
 		self.network.startReceiveThread()
 
 	def checkFinished(self):
-		return self.isBack
+		return self.finished
+
+	#determines if mouse is surrounded by walls
+	#if it is it will move in that direction
+	def checkFreedom(self):
+		freedom = []
+		if self.mouse.canGoLeft():
+			freedom.append('left')
+		if self.mouse.canGoRight():
+			freedom.append('right')
+		if self.mouse.canGoUp():
+			freedom.append('up')
+		if self.mouse.canGoDown():
+			freedom.append('down')
+		if len(freedom) is 1:
+			#maybe append path?
+			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
+			if freedom[0] is 'left':
+				self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
+				self.mouse.goLeft()
+			elif freedom[0] is 'right':
+				self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
+				self.mouse.goRight()
+			elif freedom[0] is 'up':
+				self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
+				self.mouse.goUp()
+			elif freedom[0] is 'down':
+				self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
+				self.mouse.goDown()
+		return freedom
+
+	#calculates global and if following anyone group centroids
+	def calcCentroid(self):
+		self.centroid = [self.mouse.x,self.mouse.y]
+		for key, value in self.neighborInfo.items():
+			self.centroid[0] += value['x']
+			self.centroid[1] += value['y']
+		self.centroid[0] = math.floor(self.centroid[0]/(self.numNeighbors + 1))
+		self.centroid[1] = math.floor(self.centroid[1]/(self.numNeighbors + 1))
+
+	def weightByCentroid(self, multiplier):
+		x = self.centroid[0] - self.mouse.x
+		y = self.centroid[1] - self.mouse.y
+		distSq = (x*x) + (y*y)
+		x *= distSq*multiplier
+		y *= distSq*multiplier
+		if x < 0:
+			self.weights[0] += abs(x)
+		else:
+			self.weights[1] += x
+		if y > 0:
+			self.weights[2] += y
+		else:
+			self.weights[3] += abs(y)
+
+	def calcGroupCentroid(self):
+		if len(self.group) is 0: return
+		self.groupCentroid = [self.mouse.x,self.mouse.y]
+		for id in self.group.items():
+			self.groupCentroid[0] += self.neighborInfo[id]['x']
+			self.groupCentroid[1] += self.neighborInfo[id]['y']
+		self.groupCentroid[0] = math.floor(self.groupCentroid[0]/(len(self.group) + 1))
+		self.groupCentroid[1] = math.floor(self.groupCentroid[1]/(len(self.group) + 1))
+
+	def weightByCentroid(self, multiplier):
+		print('ehllo')
+
+	#calculates weights based on neighbors distances
+	def weightByNeighbor(self, multiplier):
+		x = 0
+		y = 0
+		for key, value in self.neighborInfo.items():
+			x = value['x'] - self.mouse.x
+			y = value['y'] - self.mouse.y
+			#dist squared
+			distSq = (x*x) + (y*y)
+			x *= distSq*multiplier
+			y *= distSq*multiplier
+			if x < 0:
+				self.weights[0] += abs(x)
+			else:
+				self.weights[1] += x
+			if y > 0:
+				self.weights[2] += y
+			else:
+				self.weights[3] += abs(y)
 
 	def go(self):
 		self.mouse.senseWalls()
@@ -379,54 +467,12 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
-		x = 0
-		y = 0
-		options = [0, 0, 0, 0]
-		self.finished = True
-		found = 0
-		#calc centroid and weights
-		centroid = [self.mouse.x,self.mouse.y]
-		for key, value in self.neighborInfo.items():
-			centroid[0] += value['x']
-			centroid[1] += value['y']
-			x = value['x'] - self.mouse.x
-			y = value['y'] - self.mouse.y
-			#dist squared
-			distSq = (x*x) + (y*y)
-			dist = math.sqrt(distSq)
-			if dist is not 0.0: self.finished = False
-			if dist <= 2.0:
-				if key not in self.follow:
-					self.follow.append(key)
-				found += 1
-			elif dist > 8.0 and key in self.follow:
-				self.follow.remove(key)
-			x *= distSq
-			y *= distSq
-			if x < 0:
-				options[0] += abs(x)
-			else:
-				options[2] += x
-			if y > 0:
-				options[1] += y
-			else:
-				options[3] += abs(y)
+		previousWeights = self.weights
+		self.weights = [0,0,0,0]
+		freedom = self.checkFreedom()
+		if len(freedom) is 1: return
 
-		if self.finished: return
-		centroid[0] = math.floor(centroid[0]/self.numNeighbors + 1)
-		centroid[1] = math.floor(centroid[1]/self.numNeighbors + 1)
-
-		freedom = 0
-		if self.mouse.canGoLeft(): freedom += 1
-		if self.mouse.canGoRight(): freedom += 1
-		if self.mouse.canGoUp(): freedom += 1
-		if self.mouse.canGoDown(): freedom += 1
-		if freedom is 1:
-			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
-		if len(self.follow) is self.numNeighbors:
-			options = [0,0,0,0]
-			if self.finalCentroid is not [-1,-1]:
-				self.finalCentroid = centroid
+		self.calcCentroids()
 
 		x = centroid[0] - self.mouse.x
 		y = centroid[1] - self.mouse.x
@@ -435,68 +481,60 @@ class StrategyTestRendezvous(Strategy):
 		for value in self.neighborInfo.values():
 			x = centroid[0] - value['x']
 			y = centroid[1] - value['y']
-			if distSq <= (x*x)+(y*y):
+			if distSq >= (x*x)+(y*y):
 				dontMove = False
 				break
-
-		if dontMove and len(self.follow) > 0:
-			print('furthest away from centroid...waiting for neighbors to gain ground')
+		if dontMove and len(self.group) is self.numNeighbors:
+			print('closest centroid...waiting for neighbors to gain ground')
 			return
-		x = (centroid[0] - self.mouse.x)*distSq
-		y = (centroid[1] - self.mouse.x)*distSq
 
-		if x < 0:
-			options[0] += abs(x)*distSq
-		else:
-			options[1] += x*distSq
-		if y > 0:
-			options[2] += y*distSq
-		else:
-			options[3] += abs(y)*distSq
 
 		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
 
+
 		#narrow region
 		moved = False
+		prevVisitor = -1
+		self.path.append([self.mouse.x, self.mouse.y])
 		for d in range(4):
-			#if ranks[3 - d][1] is 0: break
 			direction = ranks[3 - d][0]
-			if self.mouse.canGoLeft() and direction is 'left' and\
-			(self.visited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or
-			self.visited[self.mouse.x-1][self.mouse.y] in self.follow) and\
-			self.visited[self.mouse.x-1][self.mouse.y] is not self.numNeighbors + 1:
-				self.path.append([self.mouse.x, self.mouse.y])
-				self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
-				self.mouse.goLeft()
-				moved = True
-			elif self.mouse.canGoUp() and direction is 'up' and\
-			(self.visited[self.mouse.x][self.mouse.y-1] is not self.mouse.id or
-			self.visited[self.mouse.x][self.mouse.y-1] in self.follow) and\
-			self.visited[self.mouse.x][self.mouse.y-1] is not self.numNeighbors + 1:
-				self.path.append([self.mouse.x, self.mouse.y])
-				self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
-				self.mouse.goUp()
-				moved = True
-			elif self.mouse.canGoRight() and direction is 'right' and\
-			(self.visited[self.mouse.x+1][self.mouse.y] is not self.mouse.id or
-			self.visited[self.mouse.x+1][self.mouse.y] in self.follow) and\
-			self.visited[self.mouse.x+1][self.mouse.y] is not self.numNeighbors + 1:
-				self.path.append([self.mouse.x, self.mouse.y])
-				self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
-				self.mouse.goRight()
-				moved = True
-			elif self.mouse.canGoDown() and direction is 'down' and\
-			(self.visited[self.mouse.x][self.mouse.y+1] is not self.mouse.id or
-			self.visited[self.mouse.x][self.mouse.y+1] in self.follow) and\
-			self.visited[self.mouse.x][self.mouse.y+1] is not self.numNeighbors + 1:
-				self.path.append([self.mouse.x, self.mouse.y])
-				self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
-				self.mouse.goDown()
-				moved = True
-			if moved: break
+			if self.mouse.canGoLeft() and direction is 'left':
+				prevVisitor = self.visited[self.mouse.x-1][self.mouse.y];
+				if prevVisitor is self.numNeighbors + 1: continue
+				if prevVisitor is not self.mouse.id or freedom is 1:
+					self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
+					self.mouse.goLeft()
+					moved = True
+			elif self.mouse.canGoUp() and direction is 'up':
+				prevVisitor = self.visited[self.mouse.x][self.mouse.y-1]
+				if prevVisitor is self.numNeighbors + 1: continue
+				if prevVisitor is not self.mouse.id or freedom is 1:
+					self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
+					self.mouse.goUp()
+					moved = True
+			elif self.mouse.canGoRight() and direction is 'right':
+				prevVisitor = self.visited[self.mouse.x+1][self.mouse.y]
+				if prevVisitor is self.numNeighbors + 1: continue
+				if prevVisitor is not self.mouse.id or freedom is 1:
+					self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
+					self.mouse.goRight()
+					moved = True
+			elif self.mouse.canGoDown() and direction is 'down':
+				prevVisitor = self.visited[self.mouse.x][self.mouse.y+1]
+				if prevVisitor is self.numNeighbors + 1: continue
+				if prevVisitor is not self.mouse.id or freedom is 1:
+					self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
+					self.mouse.goDown()
+					moved = True
+			if moved:
+				if prevVisitor is not self.mouse.id and prevVisitor is not -1 and \
+				prevVisitor is not self.numNeighbors + 1 and prevVisitor not in self.group:
+					self.group.append(prevVisitor)
+				break
 		if not moved and len(self.path) != 0:
-			x, y = self.path.pop()
+			x, y = self.path[-2]
+			if len(self.path) > 10: self.path = self.path[1:]
 			if x < self.mouse.x:
 				self.mouse.goLeft()
 			elif x > self.mouse.x:
