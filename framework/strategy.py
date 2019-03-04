@@ -419,8 +419,20 @@ class StrategyTestRendezvous(Strategy):
 		self.groupCentroid[0] = math.floor(self.groupCentroid[0]/(len(self.group) + 1))
 		self.groupCentroid[1] = math.floor(self.groupCentroid[1]/(len(self.group) + 1))
 
-	def weightByCentroid(self, multiplier):
-		print('ehllo')
+	def weightByGroupCentroid(self, multiplier):
+		x = self.groupCentroid[0] - self.mouse.x
+		y = self.groupCentroid[1] - self.mouse.y
+		distSq = (x*x) + (y*y)
+		x *= distSq*multiplier
+		y *= distSq*multiplier
+		if x < 0:
+			self.weights[0] += abs(x)
+		else:
+			self.weights[1] += x
+		if y > 0:
+			self.weights[2] += y
+		else:
+			self.weights[3] += abs(y)
 
 	#calculates weights based on neighbors distances
 	def weightByNeighbor(self, multiplier):
@@ -472,24 +484,30 @@ class StrategyTestRendezvous(Strategy):
 		freedom = self.checkFreedom()
 		if len(freedom) is 1: return
 
-		self.calcCentroids()
+		self.calcCentroid()
+		self.weightByCentroid(1)
 
-		x = centroid[0] - self.mouse.x
-		y = centroid[1] - self.mouse.x
-		distSq = (x*x)+(y*y)
-		dontMove = True
-		for value in self.neighborInfo.values():
-			x = centroid[0] - value['x']
-			y = centroid[1] - value['y']
-			if distSq >= (x*x)+(y*y):
-				dontMove = False
-				break
-		if dontMove and len(self.group) is self.numNeighbors:
-			print('closest centroid...waiting for neighbors to gain ground')
-			return
+		self.weightByNeighbor(1)
+
+		#self.calcGroupCentroid()
+		#self.weightByGroupCentroid(1)
+
+		#x = centroid[0] - self.mouse.x
+		#y = centroid[1] - self.mouse.x
+		#distSq = (x*x)+(y*y)
+		#dontMove = True
+		#for value in self.neighborInfo.values():
+		#	x = centroid[0] - value['x']
+		#	y = centroid[1] - value['y']
+		#	if distSq >= (x*x)+(y*y):
+		#		dontMove = False
+		#		break
+		#if dontMove and len(self.group) is self.numNeighbors:
+		#	print('closest centroid...waiting for neighbors to gain ground')
+		#	return
 
 
-		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
+		ranks = [('left',self.weights[0]),('right',self.weights[1]),('down',self.weights[2]),('up',self.weights[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
 
 
