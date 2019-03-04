@@ -352,7 +352,7 @@ class StrategyTestRendezvous(Strategy):
 		self.network.startReceiveThread()
 
 	def checkFinished(self):
-		return self.isBack
+		return self.finished
 
 	def go(self):
 		self.mouse.senseWalls()
@@ -379,6 +379,7 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
+		sleep(0.25)
 		x = 0
 		y = 0
 		options = [0, 0, 0, 0]
@@ -395,12 +396,16 @@ class StrategyTestRendezvous(Strategy):
 			distSq = (x*x) + (y*y)
 			dist = math.sqrt(distSq)
 			if dist is not 0.0: self.finished = False
-			if dist <= 2.0:
+			if dist <= 4.0:
 				if key not in self.follow:
 					self.follow.append(key)
 				found += 1
-			elif dist > 8.0 and key in self.follow:
-				self.follow.remove(key)
+			if key in self.follow:
+				if dist > 4.0:
+					self.follow.remove(key)
+				else:
+					x*=2
+					y*=2
 			x *= distSq
 			y *= distSq
 			if x < 0:
@@ -423,10 +428,6 @@ class StrategyTestRendezvous(Strategy):
 		if self.mouse.canGoDown(): freedom += 1
 		if freedom is 1:
 			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
-		if len(self.follow) is self.numNeighbors:
-			options = [0,0,0,0]
-			if self.finalCentroid is not [-1,-1]:
-				self.finalCentroid = centroid
 
 		x = centroid[0] - self.mouse.x
 		y = centroid[1] - self.mouse.x
@@ -435,15 +436,15 @@ class StrategyTestRendezvous(Strategy):
 		for value in self.neighborInfo.values():
 			x = centroid[0] - value['x']
 			y = centroid[1] - value['y']
-			if distSq <= (x*x)+(y*y):
+			if distSq < (x*x)+(y*y):
 				dontMove = False
 				break
 
-		if dontMove and len(self.follow) > 0:
+		if dontMove and ((len(self.follow) is 0 and math.sqrt(distSq) < 8.0) or len(self.follow) is self.numNeighbors) :
 			print('furthest away from centroid...waiting for neighbors to gain ground')
 			return
-		x = (centroid[0] - self.mouse.x)*distSq
-		y = (centroid[1] - self.mouse.x)*distSq
+		x = (centroid[0] - self.mouse.x)#*distSq
+		y = (centroid[1] - self.mouse.x)#*distSq
 
 		if x < 0:
 			options[0] += abs(x)*distSq
@@ -511,4 +512,4 @@ class StrategyTestRendezvous(Strategy):
 		#maybe label cells with cold and hot spots
 
 
-		sleep(0.5)
+		sleep(0.25)
