@@ -379,7 +379,7 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
-		sleep(0.25)
+		sleep(0.15)
 		x = 0
 		y = 0
 		options = [0, 0, 0, 0]
@@ -396,18 +396,23 @@ class StrategyTestRendezvous(Strategy):
 			distSq = (x*x) + (y*y)
 			dist = math.sqrt(distSq)
 			if dist is not 0.0: self.finished = False
-			if dist <= 4.0:
+			x *= distSq
+			y *= distSq
+			if dist <= 1.0:
 				if key not in self.follow:
 					self.follow.append(key)
 				found += 1
 			if key in self.follow:
 				if dist > 4.0:
 					self.follow.remove(key)
+					x*=8
+					y*=8
 				else:
 					x*=2
 					y*=2
-			x *= distSq
-			y *= distSq
+			else:
+				x *= 16
+				y *= 16
 			if x < 0:
 				options[0] += abs(x)
 			else:
@@ -432,28 +437,29 @@ class StrategyTestRendezvous(Strategy):
 		x = centroid[0] - self.mouse.x
 		y = centroid[1] - self.mouse.x
 		distSq = (x*x)+(y*y)
-		dontMove = True
-		for value in self.neighborInfo.values():
-			x = centroid[0] - value['x']
-			y = centroid[1] - value['y']
-			if distSq < (x*x)+(y*y):
-				dontMove = False
-				break
 
-		if dontMove and ((len(self.follow) is 0 and math.sqrt(distSq) < 8.0) or len(self.follow) is self.numNeighbors) :
-			print('furthest away from centroid...waiting for neighbors to gain ground')
-			return
-		x = (centroid[0] - self.mouse.x)#*distSq
-		y = (centroid[1] - self.mouse.x)#*distSq
+		#dontMove = True
+		#for value in self.neighborInfo.values():
+		#	x = centroid[0] - value['x']
+		#	y = centroid[1] - value['y']
+		#	if distSq < (x*x)+(y*y):
+		#		dontMove = False
+		#		break
+		#if dontMove and ((len(self.follow) is 0 and math.sqrt(distSq) < 8.0) or len(self.follow) is self.numNeighbors) :
+		#	print('furthest away from centroid...waiting for neighbors to gain ground')
+		#	return
+
+		x = (centroid[0] - self.mouse.x)*distSq
+		y = (centroid[1] - self.mouse.x)*distSq
 
 		if x < 0:
-			options[0] += abs(x)*distSq
+			options[0] += abs(x)
 		else:
-			options[1] += x*distSq
+			options[1] += x
 		if y > 0:
-			options[2] += y*distSq
+			options[2] += y
 		else:
-			options[3] += abs(y)*distSq
+			options[3] += abs(y)
 
 		ranks = [('left',options[0]),('right',options[1]),('down',options[2]),('up',options[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
@@ -461,7 +467,6 @@ class StrategyTestRendezvous(Strategy):
 		#narrow region
 		moved = False
 		for d in range(4):
-			#if ranks[3 - d][1] is 0: break
 			direction = ranks[3 - d][0]
 			if self.mouse.canGoLeft() and direction is 'left' and\
 			(self.visited[self.mouse.x-1][self.mouse.y] is not self.mouse.id or
@@ -496,7 +501,8 @@ class StrategyTestRendezvous(Strategy):
 				self.mouse.goDown()
 				moved = True
 			if moved: break
-		if not moved and len(self.path) != 0:
+		if not moved and len(self.path) != 0 and \
+		(math.sqrt(distSq) > 2.0 or self.visited[self.mouse.x][self.mouse.y] is self.numNeighbors + 1):
 			x, y = self.path.pop()
 			if x < self.mouse.x:
 				self.mouse.goLeft()
@@ -512,4 +518,4 @@ class StrategyTestRendezvous(Strategy):
 		#maybe label cells with cold and hot spots
 
 
-		sleep(0.25)
+		sleep(0.15)
