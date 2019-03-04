@@ -406,9 +406,9 @@ class StrategyTestRendezvous(Strategy):
 			if x < 0:
 				options[0] += abs(x)
 			else:
-				options[2] += x
+				options[1] += x
 			if y > 0:
-				options[1] += y
+				options[2] += y
 			else:
 				options[3] += abs(y)
 
