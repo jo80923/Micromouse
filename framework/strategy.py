@@ -379,7 +379,6 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
-		sleep(0.15)
 		x = 0
 		y = 0
 		options = [0, 0, 0, 0]
@@ -518,4 +517,4 @@ class StrategyTestRendezvous(Strategy):
 		#maybe label cells with cold and hot spots
 
 
-		sleep(0.15)
+		sleep(0.1)
