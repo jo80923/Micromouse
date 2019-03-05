@@ -777,7 +777,7 @@ class StrategyTestRendezvous(Strategy):
 		if len(self.path) > 16: self.path = self.path[1:]
 
 		#check to see if rendezvous at leader complete - will break if one robot leaves
-		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 1 and \
+		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 2 and \
 		(targetLeader and self.mouse.x is self.neighborInfo[self.leader]['x'] and
 		self.mouse.y is self.neighborInfo[self.leader]['y']):
 			print('staying put')
