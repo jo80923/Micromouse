@@ -341,6 +341,7 @@ class StrategyTestRendezvous(Strategy):
 	timeStep = 0.1
 	leader = 0
 	stayPut = False
+	backTrack = False
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.weights = [0,0,0,0]
@@ -697,6 +698,7 @@ class StrategyTestRendezvous(Strategy):
 				y = self.neighborInfo[self.leader]['y']
 				self.centroid = [x,y]
 				self.weightByXY(x,y,10)
+				if self.path.count(self.centroid): self.backTrack = True
 		elif groupSize > 0:
 			groupWeight = 1
 			neighborWeight = 1
@@ -720,6 +722,7 @@ class StrategyTestRendezvous(Strategy):
 		#attempt to move
 		moved = False
 		for d in range(4):
+			if self.backTrack: break
 			direction = ranks[3 - d][0]
 			if freedom.count(direction) is 0: continue
 			if direction is 'left':
@@ -762,6 +765,7 @@ class StrategyTestRendezvous(Strategy):
 
 		#backtrack if necessary, but can only go back 16 spaces
 		if not moved and len(self.path) != 0:
+			self.backTrack = False
 			xp, yp = self.path.pop()
 			if self.visited[xp][yp] is self.numNeighbors + 1:
 				xp, yp = self.path.pop()
@@ -774,7 +778,7 @@ class StrategyTestRendezvous(Strategy):
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
 		#keep path length at max 16
-		if len(self.path) > 16: self.path = self.path[1:]
+		if len(self.path) > 10: self.path = self.path[1:]
 
 		#check to see if rendezvous at leader complete - will break if one robot leaves
 		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 2 and \
