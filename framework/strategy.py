@@ -342,6 +342,7 @@ class StrategyTestRendezvous(Strategy):
 	detectedStop = 0
 	timeStep = 0.1
 	leader = 0
+	stayPut = False
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.weights = [0,0,0,0]
@@ -364,7 +365,7 @@ class StrategyTestRendezvous(Strategy):
 	def checkFinished(self):
 		x = 0
 		y = 0
-		self.finished = False
+		self.finished = True
 		if len(self.neighborInfo) is not self.numNeighbors:
 			self.finished = False
 			return self.finished
@@ -374,6 +375,7 @@ class StrategyTestRendezvous(Strategy):
 			if math.sqrt((x*x)+(y*y)) < 1.0:
 				self.finished = False
 				break
+		self.finished = False
 		return self.finished
 
 	def isAtCentroid(self):
@@ -395,26 +397,11 @@ class StrategyTestRendezvous(Strategy):
 			freedom.append('up')
 		if self.mouse.canGoDown():
 			freedom.append('down')
-		if len(freedom) is 1:
-			self.path.append([self.mouse.x, self.mouse.y])
-			self.visited[self.mouse.x][self.mouse.y] = self.numNeighbors + 1
-			if freedom[0] is 'left':
-				self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
-				self.mouse.goLeft()
-			elif freedom[0] is 'right':
-				self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
-				self.mouse.goRight()
-			elif freedom[0] == 'up':
-				self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
-				self.mouse.goUp()
-			elif freedom[0] is 'down':
-				self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
-				self.mouse.goDown()
 		return freedom
 
 	#returns len(group)
 	def refineGroup(self, threshold):
-		if len(self.group) is 0: return False
+		if len(self.group) is 0: return 0
 		withinThreshold = True
 		distSqNeighbors = 0
 		for item in self.group:
@@ -425,7 +412,7 @@ class StrategyTestRendezvous(Strategy):
 				self.group.remove(item)
 		return len(self.group)
 
-	#returns true if all bots within threshold and removes bots outside maxDist
+	#returns true if all bots within threshold
 	def checkGroupDist(self, distance):
 		withinThreshold = True
 		distSqNeighbors = 0
@@ -463,8 +450,8 @@ class StrategyTestRendezvous(Strategy):
 		distSq = (x*x) + (y*y)
 		maxDist = distSq
 		for value in self.neighborInfo.values():
-			x = self.centroid[0] - value[item]['x']
-			y = self.centroid[1] - value[item]['y']
+			x = self.centroid[0] - value['x']
+			y = self.centroid[1] - value['y']
 			distSq = (x*x)+(y*y)
 			if distSq > maxDist: distSq = maxDist
 		return maxDist
@@ -537,8 +524,8 @@ class StrategyTestRendezvous(Strategy):
 			return False
 		isClosest = True
 		for value in self.neighborInfo.values():
-			x = self.centroid[0] - value[item]['x']
-			y = self.centroid[1] - value[item]['y']
+			x = self.centroid[0] - value['x']
+			y = self.centroid[1] - value['y']
 			distSq = (x*x)+(y*y)
 			if distSq <= currentValue or distSq > threshold*threshold:
 				isClosest = False
@@ -574,8 +561,9 @@ class StrategyTestRendezvous(Strategy):
 		xDir = x - self.mouse.x
 		yDir = y - self.mouse.y
 		distSq = (xDir*xDir) + (yDir*yDir)
-		xDir *= distSq*multiplier
-		yDir *= distSq*multiplier
+		if distSq is 0: return
+		xDir /= distSq*multiplier
+		yDir /= distSq*multiplier
 		if xDir < 0:
 			self.weights[0] += abs(xDir)
 		else:
@@ -590,8 +578,9 @@ class StrategyTestRendezvous(Strategy):
 		x = self.centroid[0] - self.mouse.x
 		y = self.centroid[1] - self.mouse.y
 		distSq = (x*x) + (y*y)
-		x *= distSq*multiplier
-		y *= distSq*multiplier
+		if distSq is 0: return
+		x /= distSq*multiplier
+		y /= distSq*multiplier
 		if x < 0:
 			self.weights[0] += abs(x)
 		else:
@@ -615,8 +604,9 @@ class StrategyTestRendezvous(Strategy):
 		x = self.groupCentroid[0] - self.mouse.x
 		y = self.groupCentroid[1] - self.mouse.y
 		distSq = (x*x) + (y*y)
-		x *= distSq*multiplier
-		y *= distSq*multiplier
+		if distSq is 0: return
+		x /= distSq*multiplier
+		y /= distSq*multiplier
 		if x < 0:
 			self.weights[0] += abs(x)
 		else:
@@ -636,8 +626,9 @@ class StrategyTestRendezvous(Strategy):
 			y = value['y'] - self.mouse.y
 			#dist squared
 			distSq = (x*x) + (y*y)
-			x *= distSq*multiplier
-			y *= distSq*multiplier
+			if distSq is 0: continue
+			x /= distSq*multiplier
+			y /= distSq*multiplier
 			if x < 0:
 				self.weights[0] += abs(x)
 			else:
@@ -659,16 +650,14 @@ class StrategyTestRendezvous(Strategy):
 
 		self.network.sendStringData(sendData)
 		recvData = self.network.retrieveData()
-
 		numPackets = 0
-		#NOTE think if more than one in same spot
-
 		while recvData:
 			otherMap = recvData
 			cell = self.mouse.mazeMap.getCell(otherMap['x'], otherMap['y'])
 			if self.visited[otherMap['x']][otherMap['y']] is not self.numNeighbors + 1:
 				self.visited[otherMap['x']][otherMap['y']] = otherMap['id']
 			if otherMap['id'] in self.neighborInfo:
+				if otherMap['id'] < self.leader: self.leader = otherMap['id']
 				self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
 				numPackets += 1
 			if otherMap['up']: self.mouse.mazeMap.setCellUpAsWall(cell)
@@ -677,59 +666,59 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
-		#if numPackets < 3 and self.centroid is not [-1,-1]:
-		#	print('error numPackets should be 3 but is ')
-		#	print(numPackets)
-		#	sys.exit(1)
+		if self.stayPut:
+			if self.mouse.x is self.neighborInfo[self.leader]['x'] and \
+			self.mouse.y is self.neighborInfo[self.leader]['y']:
+				print('staying put')
+				return
+			else:
+				print('cant stay put')
+				self.stayPut = False
 
 		previousWeights = self.weights
 		self.weights = [0,0,0,0]
-		groupWeight = 1
-		centroidWeight = 1
-		neighborWeight = 1
+		groupWeight = 0
+		centroidWeight = 0
+		neighborWeight = 0
 		groupSize = self.refineGroup(8)
-
 
 		self.calcCentroid()
 		self.calcGroupCentroid()
-		neighborWeight += (self.numNeighbors - len(self.group))
-		if groupSize is self.numNeighbors:
-			print('finding final Centroid')
-			x = 0
-			y = 0
+		targetLeader = False
+		if groupSize is self.numNeighbors:# or self.calcMaxDistFromCentroid() <= 1:
+			targetLeader = True
 			if self.mouse.id is self.leader:
-				x = self.mouse.x
-				y = self.mouse.x
+				self.centroid = [self.mouse.x,self.mouse.y]
+				print('targeting leader')
+				return
 			else:
 				x = self.neighborInfo[self.leader]['x']
 				y = self.neighborInfo[self.leader]['y']
-			self.centroid = [x,y]
-			self.weightByXY(x,y,10)
+				self.centroid = [x,y]
+				self.weightByXY(x,y,10)
 		elif groupSize > 0:
-			groupWeight *= 4#len(self.group)*4
+			groupWeight = 4
+			neighborWeight = 2
+			self.weightByGroup(groupWeight)
+			self.weightByNeighbor(neighborWeight)
 		else:
-			neighborWeight *= 8
-
-		self.weightByNeighbor(neighborWeight)
-		self.weightByCentroid(centroidWeight)
-		self.weightByGroup(groupWeight)
+			neighborWeight = 4
+			centroidWeight = 2
+			self.weightByNeighbor(neighborWeight)
+			self.weightByCentroid(centroidWeight)
 
 		freedom = []
 		freedom = self.checkFreedom()
-		if len(freedom) is 1:
-			sleep(self.timeStep)
+		if len(self.neighborInfo) is self.numNeighbors and \
+		(self.isAtCentroid() and len(self.group) is self.numNeighbors):
 			return
-		elif self.isAtCentroid():
-			print('at centroid')
-			return
-
 
 		ranks = [('left',self.weights[0]),('right',self.weights[1]),('down',self.weights[2]),('up',self.weights[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
 		moved = False
 		for d in range(4):
 			direction = ranks[3 - d][0]
-			if direction not in freedom: continue
+			if freedom.count(direction) is 0: continue
 			if direction is 'left':
 				prevVisitor = self.visited[self.mouse.x-1][self.mouse.y];
 				if prevVisitor is self.numNeighbors + 1: continue
@@ -764,7 +753,7 @@ class StrategyTestRendezvous(Strategy):
 					moved = True
 			if moved:
 				if prevVisitor is not self.mouse.id and prevVisitor is not -1 and \
-				prevVisitor is not self.numNeighbors + 1 and prevVisitor not in self.group:
+				prevVisitor is not self.numNeighbors + 1 and self.group.count(prevVisitor) is 0:
 					self.group.append(prevVisitor)
 				break
 		if not moved and len(self.path) != 0:
@@ -783,10 +772,12 @@ class StrategyTestRendezvous(Strategy):
 				self.mouse.goUp()
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
-
 		if len(self.path) > 16: self.path = self.path[1:]
-		#if len(self.neighborInfo) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 1.0:
-		#	self.finished = True
-		#	exit(0)
+
+		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 1 and \
+		(targetLeader and self.mouse.x is self.neighborInfo[self.leader]['x'] and
+		self.mouse.y is self.neighborInfo[self.leader]['y']):
+			print('staying put')
+			self.stayPut = True
 
 		sleep(self.timeStep)
