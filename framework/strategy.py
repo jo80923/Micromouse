@@ -338,8 +338,6 @@ class StrategyTestRendezvous(Strategy):
 	weights = []
 	visited = []
 	path = []
-	homeOwner = {}
-	detectedStop = 0
 	timeStep = 0.1
 	leader = 0
 	stayPut = False
@@ -666,6 +664,7 @@ class StrategyTestRendezvous(Strategy):
 			if otherMap['right']: self.mouse.mazeMap.setCellRightAsWall(cell)
 			recvData = self.network.retrieveData()
 
+		#determine if tracking leader still viable option
 		if self.stayPut:
 			if self.mouse.x is self.neighborInfo[self.leader]['x'] and \
 			self.mouse.y is self.neighborInfo[self.leader]['y']:
@@ -675,6 +674,7 @@ class StrategyTestRendezvous(Strategy):
 				print('cant stay put')
 				self.stayPut = False
 
+		#make sure neighbors are still around and initialize weights
 		previousWeights = self.weights
 		self.weights = [0,0,0,0]
 		groupWeight = 0
@@ -697,15 +697,13 @@ class StrategyTestRendezvous(Strategy):
 				self.centroid = [x,y]
 				self.weightByXY(x,y,10)
 		elif groupSize > 0:
-			groupWeight = 4
-			neighborWeight = 2
+			groupWeight = 1
+			neighborWeight = 1
 			self.weightByGroup(groupWeight)
 			self.weightByNeighbor(neighborWeight)
 		else:
 			neighborWeight = 4
-			centroidWeight = 2
 			self.weightByNeighbor(neighborWeight)
-			self.weightByCentroid(centroidWeight)
 
 		freedom = []
 		freedom = self.checkFreedom()
@@ -757,10 +755,6 @@ class StrategyTestRendezvous(Strategy):
 					self.group.append(prevVisitor)
 				break
 		if not moved and len(self.path) != 0:
-			#xp, yp = self.path[-1]
-			#if self.visited[xp][yp] is self.numNeighbors + 1:
-			#	self.path.pop()
-			#	xp,yp = self.path[-1]
 			xp, yp = self.path.pop()
 			if self.visited[xp][yp] is self.numNeighbors + 1:
 				xp, yp = self.path.pop()
