@@ -682,10 +682,11 @@ class StrategyTestRendezvous(Strategy):
 		neighborWeight = 0
 		groupSize = self.refineGroup(8)
 
+		#calculate weights and centroids
 		self.calcCentroid()
 		self.calcGroupCentroid()
 		targetLeader = False
-		if groupSize is self.numNeighbors:# or self.calcMaxDistFromCentroid() <= 1:
+		if groupSize is self.numNeighbors:
 			targetLeader = True
 			if self.mouse.id is self.leader:
 				self.centroid = [self.mouse.x,self.mouse.y]
@@ -702,17 +703,21 @@ class StrategyTestRendezvous(Strategy):
 			self.weightByGroup(groupWeight)
 			self.weightByNeighbor(neighborWeight)
 		else:
-			neighborWeight = 4
+			neighborWeight = 1
 			self.weightByNeighbor(neighborWeight)
 
+		#determine freedom
 		freedom = []
 		freedom = self.checkFreedom()
 		if len(self.neighborInfo) is self.numNeighbors and \
 		(self.isAtCentroid() and len(self.group) is self.numNeighbors):
 			return
 
+		#sort weighted directions
 		ranks = [('left',self.weights[0]),('right',self.weights[1]),('down',self.weights[2]),('up',self.weights[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
+
+		#attempt to move
 		moved = False
 		for d in range(4):
 			direction = ranks[3 - d][0]
@@ -754,6 +759,8 @@ class StrategyTestRendezvous(Strategy):
 				prevVisitor is not self.numNeighbors + 1 and self.group.count(prevVisitor) is 0:
 					self.group.append(prevVisitor)
 				break
+
+		#backtrack if necessary, but can only go back 16 spaces
 		if not moved and len(self.path) != 0:
 			xp, yp = self.path.pop()
 			if self.visited[xp][yp] is self.numNeighbors + 1:
@@ -766,8 +773,10 @@ class StrategyTestRendezvous(Strategy):
 				self.mouse.goUp()
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
+		#keep path length at max 16
 		if len(self.path) > 16: self.path = self.path[1:]
 
+		#check to see if rendezvous at leader complete - will break if one robot leaves
 		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 1 and \
 		(targetLeader and self.mouse.x is self.neighborInfo[self.leader]['x'] and
 		self.mouse.y is self.neighborInfo[self.leader]['y']):
