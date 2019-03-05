@@ -7,6 +7,7 @@ from time import sleep
 import math
 from operator import itemgetter
 import sys
+from collections import Counter
 
 class StrategyTestProgress(Strategy):
 	progress = 10
@@ -338,9 +339,9 @@ class StrategyTestRendezvous(Strategy):
 	visited = []
 	path = []
 	homeOwner = {}
-	isLeader = False
 	detectedStop = 0
 	timeStep = 0.1
+	leader = 0
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.weights = [0,0,0,0]
@@ -348,11 +349,12 @@ class StrategyTestRendezvous(Strategy):
 		self.groupCentroid = [-1,-1]
 		self.stop = [-1,-1]
 		self.mouse = mouse
+		self.leader = self.mouse.id
 		self.numNeighbors = numNeighbors
 		for key, value in initLocations.items():
 			if key is not self.mouse.id:
 				self.neighborInfo[key] = {'x':value[0], 'y':value[1], 'direction' : 'UP'}
-		if [self.mouse.x,self.mouse.y] is [0,0]: self.isLeader = True
+				if key < self.leader: self.leader = key
 		self.visited = [[-1 for i in range(self.mouse.mazeMap.width)] for j in range(self.mouse.mazeMap.height)]
 		self.visited[self.mouse.x][self.mouse.y] = self.mouse.id
 		self.network = NetworkInterface()
@@ -369,7 +371,7 @@ class StrategyTestRendezvous(Strategy):
 		for value in self.neighborInfo.values():
 			x = value['x'] - self.mouse.x
 			y = value['y'] - self.mouse.y
-			if math.sqrt((x*x)+(y*y)) is 0.0:
+			if math.sqrt((x*x)+(y*y)) < 1.0:
 				self.finished = False
 				break
 		return self.finished
@@ -646,6 +648,7 @@ class StrategyTestRendezvous(Strategy):
 				self.weights[3] += abs(y)
 
 	def go(self):
+
 		self.mouse.senseWalls()
 		print(self.mouse.getCurrentCell().getWhichIsWall())
 
@@ -658,8 +661,6 @@ class StrategyTestRendezvous(Strategy):
 		recvData = self.network.retrieveData()
 
 		numPackets = 0
-		prevLocal = [0,0]
-		stop = [-1,-1]
 		#NOTE think if more than one in same spot
 
 		while recvData:
@@ -668,12 +669,8 @@ class StrategyTestRendezvous(Strategy):
 			if self.visited[otherMap['x']][otherMap['y']] is not self.numNeighbors + 1:
 				self.visited[otherMap['x']][otherMap['y']] = otherMap['id']
 			if otherMap['id'] in self.neighborInfo:
-				prevLocal = [self.neighborInfo[otherMap['id']]['x'],self.neighborInfo[otherMap['id']]['y']]
 				self.neighborInfo[otherMap['id']] = {'x':otherMap['x'], 'y':otherMap['y'],'direction':otherMap['direction']}
 				numPackets += 1
-				if prevLocal is [otherMap['x'],otherMap['y']]:
-					stop = prevLocal
-
 			if otherMap['up']: self.mouse.mazeMap.setCellUpAsWall(cell)
 			if otherMap['down']: self.mouse.mazeMap.setCellDownAsWall(cell)
 			if otherMap['left']: self.mouse.mazeMap.setCellLeftAsWall(cell)
@@ -685,41 +682,47 @@ class StrategyTestRendezvous(Strategy):
 		#	print(numPackets)
 		#	sys.exit(1)
 
-		if stop is not [-1,-1]:
-			self.centroid = stop
-			self.groupCentroid = stop
-		else:
-			self.calcCentroid()
-			self.calcGroupCentroid()
-
-		freedom = []
-		freedom = self.checkFreedom()
-		if len(freedom) is 1 or self.isAtCentroid():
-			sleep(0.1)
-			return
-
 		previousWeights = self.weights
 		self.weights = [0,0,0,0]
-		groupWeight = 0
-		centroidWeight = 0
-		neighborWeight = 0
+		groupWeight = 1
+		centroidWeight = 1
+		neighborWeight = 1
 		groupSize = self.refineGroup(8)
 
-		centroidWeight = 1
-		neighborWeight = (self.numNeighbors  + 1 - len(self.group))
-		if len(self.group) > 0:
-			groupWeight = len(self.group)
 
+		self.calcCentroid()
+		self.calcGroupCentroid()
+		neighborWeight += (self.numNeighbors - len(self.group))
 		if groupSize is self.numNeighbors:
-			if stop is [-1,-1] and self.isClosestToCentroid():
-				sleep(0.1)
-				return
-			centroidWeight *= (groupWeight+neighborWeight)
-
+			print('finding final Centroid')
+			x = 0
+			y = 0
+			if self.mouse.id is self.leader:
+				x = self.mouse.x
+				y = self.mouse.x
+			else:
+				x = self.neighborInfo[self.leader]['x']
+				y = self.neighborInfo[self.leader]['y']
+			self.centroid = [x,y]
+			self.weightByXY(x,y,10)
+		elif groupSize > 0:
+			groupWeight *= 4#len(self.group)*4
+		else:
+			neighborWeight *= 8
 
 		self.weightByNeighbor(neighborWeight)
 		self.weightByCentroid(centroidWeight)
 		self.weightByGroup(groupWeight)
+
+		freedom = []
+		freedom = self.checkFreedom()
+		if len(freedom) is 1:
+			sleep(self.timeStep)
+			return
+		elif self.isAtCentroid():
+			print('at centroid')
+			return
+
 
 		ranks = [('left',self.weights[0]),('right',self.weights[1]),('down',self.weights[2]),('up',self.weights[3])]
 		ranks = sorted(ranks, key=itemgetter(1))
@@ -730,7 +733,7 @@ class StrategyTestRendezvous(Strategy):
 			if direction is 'left':
 				prevVisitor = self.visited[self.mouse.x-1][self.mouse.y];
 				if prevVisitor is self.numNeighbors + 1: continue
-				if prevVisitor is not self.mouse.id:# or (previousWeights[0] >= self.weights[0] and len(self.path) < 30):
+				if prevVisitor is not self.mouse.id:
 					self.path.append([self.mouse.x, self.mouse.y])
 					self.visited[self.mouse.x-1][self.mouse.y] = self.mouse.id
 					self.mouse.goLeft()
@@ -738,7 +741,7 @@ class StrategyTestRendezvous(Strategy):
 			elif direction is 'up':
 				prevVisitor = self.visited[self.mouse.x][self.mouse.y-1]
 				if prevVisitor is self.numNeighbors + 1: continue
-				if prevVisitor is not self.mouse.id:# or (previousWeights[3] >= self.weights[3] and len(self.path) < 30):
+				if prevVisitor is not self.mouse.id:
 					self.path.append([self.mouse.x, self.mouse.y])
 					self.visited[self.mouse.x][self.mouse.y-1] = self.mouse.id
 					self.mouse.goUp()
@@ -746,7 +749,7 @@ class StrategyTestRendezvous(Strategy):
 			elif direction is 'right':
 				prevVisitor = self.visited[self.mouse.x+1][self.mouse.y]
 				if prevVisitor is self.numNeighbors + 1: continue
-				if prevVisitor is not self.mouse.id:# or (previousWeights[1] >= self.weights[1] and len(self.path) < 30):
+				if prevVisitor is not self.mouse.id:
 					self.path.append([self.mouse.x, self.mouse.y])
 					self.visited[self.mouse.x+1][self.mouse.y] = self.mouse.id
 					self.mouse.goRight()
@@ -754,7 +757,7 @@ class StrategyTestRendezvous(Strategy):
 			elif direction is 'down':
 				prevVisitor = self.visited[self.mouse.x][self.mouse.y+1]
 				if prevVisitor is self.numNeighbors + 1: continue
-				if prevVisitor is not self.mouse.id:# or (previousWeights[2] >= self.weights[2] and len(self.path) < 30):
+				if prevVisitor is not self.mouse.id:
 					self.path.append([self.mouse.x, self.mouse.y])
 					self.visited[self.mouse.x][self.mouse.y+1] = self.mouse.id
 					self.mouse.goDown()
@@ -781,6 +784,9 @@ class StrategyTestRendezvous(Strategy):
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
 
-		if len(self.path) > 10: self.path = self.path[1:]
+		if len(self.path) > 16: self.path = self.path[1:]
+		#if len(self.neighborInfo) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 1.0:
+		#	self.finished = True
+		#	exit(0)
 
-		sleep(0.1)
+		sleep(self.timeStep)
