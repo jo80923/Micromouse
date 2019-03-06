@@ -778,7 +778,7 @@ class StrategyTestRendezvous(Strategy):
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
 		#keep path length at max 16
-		if len(self.path) > 10: self.path = self.path[1:]
+		if len(self.path) > 16: self.path = self.path[1:]
 
 		#check to see if rendezvous at leader complete - will break if one robot leaves
 		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 2 and \

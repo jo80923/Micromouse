@@ -128,7 +128,7 @@ class WallDetector:
                 isRightWall = self.sensorController.senseFront()
             elif self.mouse.isTowardingDown():
                 isRightWall = self.sensorController.senseLeft()
-                
+
             if isRightWall:
                 self.mouse.mazeMap.setCellRightAsWall(cell)
 
@@ -142,7 +142,7 @@ class WallDetector:
                 isUpWall = self.sensorController.senseLeft()
             elif self.mouse.isTowardingDown():
                 isUpWall = self.sensorController.senseBack()
-                
+
             if isUpWall:
                 self.mouse.mazeMap.setCellUpAsWall(cell)
 
@@ -156,7 +156,7 @@ class WallDetector:
                 isDownWall = self.sensorController.senseRight()
             elif self.mouse.isTowardingDown():
                 isDownWall = self.sensorController.senseFront()
-                
+
             if isDownWall:
                 self.mouse.mazeMap.setCellDownAsWall(cell)
 

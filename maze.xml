@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scenario compiled="true" name="maze.xml" version="1.0" xmlns="nmfPlan" xmlns:CORE="coreSpecific">
   <network id="wlan5" name="wlan5">
-    <point lat="47.5760825895" lon="-122.124933134" type="gps"/>
+    <point lat="47.5761230757" lon="-122.12493246" type="gps"/>
     <type>wireless</type>
     <alias domain="COREID">5</alias>
+    <member type="interface">n1/eth0</member>
+    <member type="interface">n2/eth0</member>
+    <member type="interface">n3/eth0</member>
+    <member type="interface">n4/eth0</member>
+    <member type="interface">n6/eth0</member>
     <member type="channel">wlan5/wireless</member>
     <channel id="wlan5/wireless" name="wireless">
       <type domain="CORE">basic_range</type>
@@ -12,31 +17,77 @@
       <parameter name="jitter">0.0</parameter>
       <parameter name="delay">20000</parameter>
       <parameter name="error">0.0</parameter>
+      <member index="0" type="interface">n1/eth0</member>
+      <member index="1" type="interface">n2/eth0</member>
+      <member index="2" type="interface">n3/eth0</member>
+      <member index="3" type="interface">n4/eth0</member>
+      <member index="4" type="interface">n6/eth0</member>
     </channel>
   </network>
   <router id="n1" name="n1">
     <type domain="CORE">mdr</type>
+    <interface id="n1/eth0" name="eth0">
+      <member index="0" type="channel">wlan5/wireless</member>
+      <member type="network">wlan5</member>
+      <address type="mac">00:00:00:aa:00:05</address>
+      <address type="IPv4">10.0.0.1/32</address>
+      <address type="IPv6">2001::1/128</address>
+    </interface>
     <alias domain="COREID">1</alias>
-    <point lat="47.5788318481" lon="-122.13148973" type="gps"/>
+    <point lat="47.5787712743" lon="-122.120001359" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/vader.png"/>
   </router>
   <router id="n2" name="n2">
     <type domain="CORE">mdr</type>
+    <interface id="n2/eth0" name="eth0">
+      <member index="1" type="channel">wlan5/wireless</member>
+      <member type="network">wlan5</member>
+      <address type="mac">00:00:00:aa:00:06</address>
+      <address type="IPv4">10.0.0.2/32</address>
+      <address type="IPv6">2001::2/128</address>
+    </interface>
     <alias domain="COREID">2</alias>
-    <point lat="47.5786803709" lon="-122.109969642" type="gps"/>
+    <point lat="47.5741926184" lon="-122.114333889" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/cat.png"/>
   </router>
   <router id="n3" name="n3">
     <type domain="CORE">mdr</type>
+    <interface id="n3/eth0" name="eth0">
+      <member index="2" type="channel">wlan5/wireless</member>
+      <member type="network">wlan5</member>
+      <address type="mac">00:00:00:aa:00:07</address>
+      <address type="IPv4">10.0.0.3/32</address>
+      <address type="IPv6">2001::3/128</address>
+    </interface>
     <alias domain="COREID">3</alias>
-    <point lat="47.5693315171" lon="-122.131706643" type="gps"/>
+    <point lat="47.5723374049" lon="-122.125853139" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/mario.png"/>
   </router>
   <router id="n4" name="n4">
     <type domain="CORE">mdr</type>
+    <interface id="n4/eth0" name="eth0">
+      <member index="3" type="channel">wlan5/wireless</member>
+      <member type="network">wlan5</member>
+      <address type="mac">00:00:00:aa:00:08</address>
+      <address type="IPv4">10.0.0.4/32</address>
+      <address type="IPv6">2001::4/128</address>
+    </interface>
     <alias domain="COREID">4</alias>
-    <point lat="47.5691524962" lon="-122.110111141" type="gps"/>
+    <point lat="47.5716896249" lon="-122.125863919" type="gps"/>
     <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/raptor.png"/>
+  </router>
+  <router id="n6" name="n6">
+    <type domain="CORE">mdr</type>
+    <interface id="n6/eth0" name="eth0">
+      <member index="4" type="channel">wlan5/wireless</member>
+      <member type="network">wlan5</member>
+      <address type="mac">00:00:00:aa:00:09</address>
+      <address type="IPv4">10.0.0.5/32</address>
+      <address type="IPv6">2001::5/128</address>
+    </interface>
+    <alias domain="COREID">6</alias>
+    <point lat="47.5743151561" lon="-122.121492128" type="gps"/>
+    <CORE:presentation icon="/home/jackson/Development/Micromouse/icons/mario.png"/>
   </router>
   <CORE:defaultservices>
     <device type="mdr">
@@ -45,20 +96,6 @@
       <service name="vtysh"/>
       <service name="IPForward"/>
       <service name="MyService"/>
-    </device>
-    <device type="router">
-      <service name="zebra"/>
-      <service name="OSPFv2"/>
-      <service name="OSPFv3"/>
-      <service name="vtysh"/>
-      <service name="IPForward"/>
-    </device>
-    <device type="host">
-      <service name="DefaultRoute"/>
-      <service name="SSH"/>
-    </device>
-    <device type="PC">
-      <service name="DefaultRoute"/>
     </device>
   </CORE:defaultservices>
   <CORE:sessionconfig>
