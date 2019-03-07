@@ -338,10 +338,14 @@ class StrategyTestRendezvous(Strategy):
 	weights = []
 	visited = []
 	path = []
-	timeStep = 0.1
 	leader = 0
 	stayPut = False
 	backTrack = False
+	maxPathLength = 16
+	timeStep = 0.1
+
+	#TODO find better way to eliminated following if through walls
+	#TODO parameterize timeStep, weighting, and max path length
 
 	def __init__(self, mouse, numNeighbors, initLocations):
 		self.weights = [0,0,0,0]
@@ -561,16 +565,16 @@ class StrategyTestRendezvous(Strategy):
 		yDir = y - self.mouse.y
 		distSq = (xDir*xDir) + (yDir*yDir)
 		if distSq is 0: return
-		xDir /= distSq*multiplier
-		yDir /= distSq*multiplier
+		xDir /= distSq
+		yDir /= distSq
 		if xDir < 0:
-			self.weights[0] += abs(xDir)
+			self.weights[0] += abs(xDir)*multiplier
 		else:
-			self.weights[1] += xDir
+			self.weights[1] += xDir*multiplier
 		if yDir > 0:
-			self.weights[2] += yDir
+			self.weights[2] += yDir*multiplier
 		else:
-			self.weights[3] += abs(yDir)
+			self.weights[3] += abs(yDir)*multiplier
 
 	def weightByCentroid(self, multiplier):
 		if multiplier is 0: return
@@ -578,16 +582,16 @@ class StrategyTestRendezvous(Strategy):
 		y = self.centroid[1] - self.mouse.y
 		distSq = (x*x) + (y*y)
 		if distSq is 0: return
-		x /= distSq*multiplier
-		y /= distSq*multiplier
+		x /= distSq
+		y /= distSq
 		if x < 0:
-			self.weights[0] += abs(x)
+			self.weights[0] += abs(x)*multiplier
 		else:
-			self.weights[1] += x
+			self.weights[1] += x*multiplier
 		if y > 0:
-			self.weights[2] += y
+			self.weights[2] += y*multiplier
 		else:
-			self.weights[3] += abs(y)
+			self.weights[3] += abs(y)*multiplier
 
 	def calcGroupCentroid(self):
 		if len(self.group) is 0: return
@@ -604,16 +608,16 @@ class StrategyTestRendezvous(Strategy):
 		y = self.groupCentroid[1] - self.mouse.y
 		distSq = (x*x) + (y*y)
 		if distSq is 0: return
-		x /= distSq*multiplier
-		y /= distSq*multiplier
+		x /= distSq
+		y /= distSq
 		if x < 0:
-			self.weights[0] += abs(x)
+			self.weights[0] += abs(x)*multiplier
 		else:
-			self.weights[1] += x
+			self.weights[1] += x*multiplier
 		if y > 0:
-			self.weights[2] += y
+			self.weights[2] += y*multiplier
 		else:
-			self.weights[3] += abs(y)
+			self.weights[3] += abs(y)*multiplier
 
 	#calculates weights based on neighbors distances
 	def weightByNeighbor(self, multiplier):
@@ -626,16 +630,16 @@ class StrategyTestRendezvous(Strategy):
 			#dist squared
 			distSq = (x*x) + (y*y)
 			if distSq is 0: continue
-			x /= distSq*multiplier
-			y /= distSq*multiplier
+			x /= distSq
+			y /= distSq
 			if x < 0:
-				self.weights[0] += abs(x)
+				self.weights[0] += abs(x)*multiplier
 			else:
-				self.weights[1] += x
+				self.weights[1] += x*multiplier
 			if y > 0:
-				self.weights[2] += y
+				self.weights[2] += y*multiplier
 			else:
-				self.weights[3] += abs(y)
+				self.weights[3] += abs(y)*multiplier
 
 	def go(self):
 
@@ -681,11 +685,13 @@ class StrategyTestRendezvous(Strategy):
 		groupWeight = 0
 		centroidWeight = 0
 		neighborWeight = 0
+
 		groupSize = self.refineGroup(8)
 
 		#calculate weights and centroids
 		self.calcCentroid()
 		self.calcGroupCentroid()
+		#NOTE weight multipliers could be optimized or irradicated
 		targetLeader = False
 		if groupSize is self.numNeighbors:
 			targetLeader = True
@@ -697,11 +703,11 @@ class StrategyTestRendezvous(Strategy):
 				x = self.neighborInfo[self.leader]['x']
 				y = self.neighborInfo[self.leader]['y']
 				self.centroid = [x,y]
-				self.weightByXY(x,y,10)
+				self.weightByXY(x,y,1)
 				if self.path.count(self.centroid): self.backTrack = True
 		elif groupSize > 0:
 			groupWeight = 1
-			neighborWeight = 1
+			neighborWeight = 2
 			self.weightByGroup(groupWeight)
 			self.weightByNeighbor(neighborWeight)
 		else:
@@ -777,8 +783,8 @@ class StrategyTestRendezvous(Strategy):
 				self.mouse.goUp()
 			elif yp > self.mouse.y:
 				self.mouse.goDown()
-		#keep path length at max 16
-		if len(self.path) > 16: self.path = self.path[1:]
+		#keep path length at max
+		if len(self.path) > self.maxPathLength: self.path = self.path[1:]
 
 		#check to see if rendezvous at leader complete - will break if one robot leaves
 		if len(self.group) is self.numNeighbors and self.calcMaxDistFromCentroid() <= 2 and \
