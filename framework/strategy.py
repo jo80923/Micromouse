@@ -342,7 +342,7 @@ class StrategyTestRendezvous(Strategy):
 	stayPut = False
 	backTrack = False
 	maxPathLength = 16
-	timeStep = 0.1
+	timeStep = 0
 
 	#TODO find better way to eliminated following if through walls
 	#TODO parameterize timeStep, weighting, and max path length
