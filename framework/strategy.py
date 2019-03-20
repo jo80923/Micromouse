@@ -338,7 +338,7 @@ class StrategyTestRendezvous(Strategy):
 	weights = []
 	visited = []
 	path = []
-	timeStep = 0.1
+	timeStep = 0.05
 	leader = 0
 	stayPut = False
 	backTrack = False
