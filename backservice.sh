@@ -1,5 +1,5 @@
 #!/bin/bash
-export ServiceHOME=/home/jackson/Development/Micromouse/framework
+export ServiceHOME=/home/jackson/Development/robot/Micromouse/framework
 
 python3 $ServiceHOME/core_demo.py >> tmp.log
 

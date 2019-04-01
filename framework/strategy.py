@@ -326,7 +326,7 @@ class StrategyTestDFSDisplayEV3(Strategy):
 			else:
 				self.isBack = True
 
-class StrategyTestRendezvous(Strategy):
+class StrategyJaxRendezvous(Strategy):
 	mouse = None
 	network = None
 	finished = False
