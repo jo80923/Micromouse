@@ -683,7 +683,7 @@ class StrategyJaxRendezvous(Strategy):
 		previousWeights = self.weights
 		self.weights = [0,0,0,0]
 		groupWeight = 0
-		centroidWeight = 0
+		centroidWeight = 0#not used at all currently
 		neighborWeight = 0
 
 		groupSize = self.refineGroup(8)
@@ -702,9 +702,8 @@ class StrategyJaxRendezvous(Strategy):
 			else:
 				x = self.neighborInfo[self.leader]['x']
 				y = self.neighborInfo[self.leader]['y']
-				self.centroid = [x,y]
 				self.weightByXY(x,y,1)
-				if self.path.count(self.centroid): self.backTrack = True
+				if self.path.count([x,y]): self.backTrack = True
 		elif groupSize > 0:
 			groupWeight = 1
 			neighborWeight = 2
@@ -717,6 +716,8 @@ class StrategyJaxRendezvous(Strategy):
 		#determine freedom
 		freedom = []
 		freedom = self.checkFreedom()
+
+		#determine if pause is good idea
 		if len(self.neighborInfo) is self.numNeighbors and \
 		(self.isAtCentroid() and len(self.group) is self.numNeighbors):
 			return

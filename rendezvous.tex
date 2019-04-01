@@ -1,0 +1,79 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage[lmargin=0.5in,rmargin=0.5in,tmargin=0.5in,bmargin=0.5in]{geometry} %%AT
+
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
+
+\begin{document}
+\begin{algorithm}
+\caption{Jax Rendezvous (heurisitic based multirobot rendezvous)}\label{euclid}
+\begin{algorithmic}[1]
+
+\State Let: $map = \{cell_\text{x,y,ownerID} \in R^{2}\}$
+\State Let: $path = \{cells \in map_\text{visited} | length \leq maxPathLength\}$
+\State Let: $group = \{robot_\text{i}\in Robots |\newline \{robot_\text{i}.path\cap self.path\}>0 \text{ } \&\& \text{ } dist < maxDistFromNeighbor\}$
+\State Let: $groupLeader = \{min(robot_\text{i}.id)\in group\}$
+\State Let: $centroids = \{centroid of group, overall centroid\}$
+\State Let: $weights = \{neighbor,groupCentroid,xy\}$
+\newline
+\Procedure{OVERALL STEP FUNCTION}{}
+\BState \emph{\textbf{recvUpdates}}:
+  \State $neighborInfo \gets robot_i.update$
+  \State $map_\text{x,y} \gets robot_i.id$
+\BState \emph{\textbf{checkForStopCriteria}}:
+  \If {$length(group) == length(Robots) \text{ } \&\& \text{ } self.cell == leader.cell$} \Return
+  \EndIf
+\BState \emph{\textbf{refineGroup}}:
+  \For{$neighbors \in group$}
+    \If {$euclideanDistance(robot, neighbor_i) > maxDistFromNeighbor$}
+      \State $group.remove(neighbor_i)$
+    \EndIf
+  \EndFor
+\BState \emph{\textbf{computeOptions}}:
+  \State $computeCentroid()$
+  \State $computeGroupCentroid()$
+  \State $weightDirections()$
+    \If {$length(group) == length(Robots)$}
+      \State $weights = {0,0,1}$
+      \State $weightByXY(leader.cell)$
+      \If {$leader.cell \in self.path$}
+        \State $self.backTrack = true$
+      \EndIf
+    \ElsIf {$length(group) > 0$}
+      \State $weights = {2,1,0}$
+      \State $weightByNeighbor()$
+      \State $weightByGroup()$
+    \Else
+      \State $weights={1,0,0}$
+      \State $weightByNeighbor()$
+    \EndIf
+\BState \emph{\textbf{move}}:
+  \State $checkFreedom()$
+  \State $checkForPause()$
+  \State $sortDirections()$
+  \For{$rankedDirections \in possibleDirections$}
+    \If {$self.backTrack$} break
+    \EndIf
+    \If {$cell_\text{t+1}.ownerID != self.id$}
+      \State $group.add(cell_\text{t+1}.ownerID)$
+      \State $move()$
+    \EndIf
+  \EndFor
+  \If {$hasNotMoved$}
+    \State $backTrack()$
+    \State $self.backTrack = false$
+  \EndIf
+\BState \emph{\textbf{checkForSuccessCriteria}}:
+  \If {$length(group) == length(Robots) \&\& euclideanDistance(robot_i, self) == 0$}
+    \State $success = true$
+    \State $exit()$
+  \EndIf
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{document}
